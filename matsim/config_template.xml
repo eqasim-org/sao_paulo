@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+	<module name="controler" >
+		<param name="firstIteration" value="0" />
+		<param name="lastIteration" value="0" />
+		<param name="outputDirectory" value="simulation_output" />
+		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
+	</module>
+
+	<module name="global" >
+		<param name="coordinateSystem" value="Atlantis" />
+		<param name="numberOfThreads" value="24" />
+		<param name="randomSeed" value="4711" />
+	</module>
+
+    <module name="qsim">
+        <param name="endTime" value="30:00:00" />
+        <param name="numberOfThreads" value="24" />
+    </module>
+
+	<module name="network" >
+		<param name="inputNetworkFile" value="sao_paulo_network.xml.gz" />
+	</module>
+
+	<module name="plans" >
+		<param name="inputPlansFile" value="sao_paulo_population.xml.gz" />
+	</module>
+
+    <module name="transit">
+        <param name="transitScheduleFile" value="sao_paulo_transit_schedule.xml.gz" />
+        <!--param name="vehiclesFile" value="sao_paulo_transit_vehicles.xml.gz" /-->
+        <param name="useTransit" value="true" />
+    </module>
+
+    <module name="planCalcScore">
+        <parameterset type="modeParams">
+            <param name="mode" value="car_passenger" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="home" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="work" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="education" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="shop" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="leisure" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+        <parameterset type="activityParams">
+            <param name="activityType" value="other" />
+            <param name="scoringThisActivityAtAll" value="false" />
+        </parameterset>
+    </module>
+
+    <module name="planscalcroute">
+        <param name="networkModes" value="car,car_passenger" />
+        <parameterset type="teleportedModeParameters">
+            <param name="mode" value="bike" />
+            <param name="teleportedModeSpeed" value="3.3" />
+            <param name="beelineDistanceFactor" value="1.0" />
+        </parameterset>
+        <parameterset type="teleportedModeParameters">
+            <param name="mode" value="walk" />
+            <param name="teleportedModeSpeed" value="2.2" />
+            <param name="beelineDistanceFactor" value="1.0" />
+        </parameterset>
+    </module>
+
+
+    <module name="travelTimeCalculator">
+        <param name="analyzedModes" value="car,car_passenger" />
+    </module>
+
+    <module name="strategy">
+        <parameterset type="strategysettings">
+            <param name="strategyName" value="BestScore" />
+            <param name="weight" value="1.0" />
+        </parameterset>
+    </module>
+</config>
