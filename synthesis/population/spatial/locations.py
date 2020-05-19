@@ -5,9 +5,9 @@ import io
 import matsim.writers
 import pandas as pd
 
-def configure(context, require):
-    require.stage("synthesis.activities")
-    require.stage("synthesis.spatial.by_person.primary_locations")
+def configure(context):
+    context.stage("synthesis.population.activities")
+    context.stage("synthesis.population.spatial.by_person.primary_locations")
 
 def execute(context):
     df_activities = context.stage("population.activities")

@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 
 def configure(context, require):
-    require.stage("population.sociodemographics")
-    require.stage("population.trips")
+    require.stage("synthesis.sociodemographics")
+    require.stage("synthesis.trips")
 
 def execute(context):
     df_trips = pd.DataFrame(context.stage("population.trips"), copy = True)

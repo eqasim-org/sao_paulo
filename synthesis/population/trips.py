@@ -5,7 +5,7 @@ import numpy as np
 #import data.constants as c
 
 def configure(context, require):
-    require.stage("population.sociodemographics")
+    require.stage("synthesis.sociodemographics")
     require.stage("data.hts.cleaned")
 
 def execute(context):

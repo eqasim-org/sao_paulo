@@ -6,9 +6,9 @@ import shapely.geometry as geo
 import multiprocessing as mp
 import geopandas as gpd
 
-def configure(context, require):
-    require.stage("synthesis.spatial.by_person.primary_locations")
-    require.stage("synthesis.sociodemographics")
+def configure(context):
+    context.stage("synthesis.population.spatial.by_person.primary_locations")
+    context.stage("synthesis.population.sociodemographics")
 
 def execute(context):
     df = context.stage("population.sociodemographics")[["person_id"]]

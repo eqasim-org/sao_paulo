@@ -3,8 +3,8 @@ import numpy as np
 #import data.constants as c
 
 def configure(context, require):
-    require.stage("population.matching")
-    require.stage("population.upscaled")
+    require.stage("synthesis.matching")
+    require.stage("synthesis.upscaled")
     require.stage("data.hts.cleaned")
     #require.stage("population.income")
 

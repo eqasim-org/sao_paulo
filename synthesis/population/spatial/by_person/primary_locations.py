@@ -13,12 +13,12 @@ from functools import partial
 
 #import data.spatial.pt_zone
 
-def configure(context, require):
-    require.stage("synthesis.spatial.by_person.primary_zones")
-    require.stage("data.spatial.zones")
-    require.stage("synthesis.opportunities")
-    require.stage("synthesis.sociodemographics")
-    require.stage("synthesis.trips")
+def configure(context):
+    context.stage("synthesis.population.spatial.by_person.primary_zones")
+    context.stage("data.spatial.zones")
+    context.stage("synthesis.destinations")
+    context.stage("synthesis.population.sociodemographics")
+    context.stage("synthesis.population.trips")
 
 SAMPLE_SIZE = 1000
 

@@ -3,7 +3,7 @@ import numpy as np
 import population.algo.hot_deck_matching
 
 def configure(context, require):
-    require.stage("population.upscaled")
+    require.stage("synthesis.upscaled")
     require.stage("data.hts.cleaned")
 
 MINIMUM_SOURCE_SAMPLES = 20

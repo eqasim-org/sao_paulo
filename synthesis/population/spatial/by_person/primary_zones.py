@@ -6,11 +6,11 @@ import numpy as np
 import shapely.geometry as geo
 import multiprocessing as mp
 
-def configure(context, require):
-    require.stage("data.od.cleaned")
-    require.stage("data.spatial.zones")
-    require.stage("synthesis.sociodemographics")
-    require.stage("synthesis.trips")
+def configure(context):
+    context.stage("data.od.cleaned")
+    context.stage("data.spatial.zones")
+    context.stage("synthesis.population.sociodemographics")
+    context.stage("synthesis.population.trips")
 
 # TODO: There are some points for improvement:
 # - 2. We can add a second step where an IRIS is sampled for each person (given

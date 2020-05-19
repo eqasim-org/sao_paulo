@@ -5,8 +5,8 @@ import io
 import matsim.writers
 
 def configure(context, require):
-    require.stage("population.opportunities")
-    require.stage("population.spatial.by_person.primary_locations")
+    require.stage("synthesis.opportunities")
+    require.stage("synthesis.spatial.by_person.primary_locations")
 
 FIELDS = [
     "location_id", "x", "y",

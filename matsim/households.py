@@ -6,8 +6,8 @@ import pandas as pd
 import io
 
 def configure(context, require):
-    require.stage("population.sociodemographics")
-    require.stage("population.spatial.by_person.primary_locations")
+    require.stage("synthesis.sociodemographics")
+    require.stage("synthesis.spatial.by_person.primary_locations")
 
 FIELDS = ["person_id", "household_id", "binary_car_availability", "hhlIncome"]
 

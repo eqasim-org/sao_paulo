@@ -6,10 +6,10 @@ import matsim.writers
 import pandas as pd
 
 def configure(context, require):
-    require.stage("population.sociodemographics")
-    require.stage("population.trips")
-    require.stage("population.activities")
-    require.stage("population.spatial.locations")
+    require.stage("synthesis.sociodemographics")
+    require.stage("synthesis.trips")
+    require.stage("synthesis.activities")
+    require.stage("synthesis.spatial.locations")
 
 class PersonWriter:
     def __init__(self, person):

@@ -8,7 +8,7 @@ import os
 import eqasim.location_assignment as eqla
 
 def configure(context, require):
-    require.stage("population.trips")
+    require.stage("synthesis.trips")
     require.stage("data.hts.cleaned")
     require.stage("matsim.java.eqasim")
     require.stage("utils.java")
