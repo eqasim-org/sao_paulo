@@ -6,11 +6,9 @@ import itertools
 import shapely.geometry as geo
 import geopandas as gpd
 
-def configure(context, require):
-    require.stage("data.spatial.zones")
-    require.stage("data.hts.cleaned")
-
-
+def configure(context):
+    context.stage("data.spatial.zones")
+    context.stage("data.hts.cleaned")
 
 def execute(context):
     
@@ -35,7 +33,7 @@ def execute(context):
     df_trips["dest_geoloc"] = merged_zones["zone_id"]
    
     df_trips_persons = pd.merge(df_trips,df_persons,on=["person_id"],how='left')
-    df_trips_persons = df_trips_persons[ (df_trips_persons["purpose"]=='work')]
+    df_trips_persons = df_trips_persons[ (df_trips_persons["following_purpose"]=='work')]
     #drop duplicate persons
     df_trips_persons.drop_duplicates(subset=["person_id"])
     
@@ -44,7 +42,7 @@ def execute(context):
     df_work.columns = ["origin_id", "destination_id", "weight"]
     
     df_trips_persons = pd.merge(df_trips,df_persons,on=["person_id"],how='left')
-    df_trips_persons = df_trips_persons[ (df_trips_persons["purpose"]=='education')]
+    df_trips_persons = df_trips_persons[ (df_trips_persons["following_purpose"]=='education')]
     #drop duplicate persons
     df_trips_persons.drop_duplicates(subset=["person_id"])
     

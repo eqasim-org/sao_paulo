@@ -10,8 +10,8 @@ def configure(context):
     context.stage("synthesis.population.spatial.by_person.primary_locations")
 
 def execute(context):
-    df_activities = context.stage("population.activities")
-    df_home, df_work, df_education = context.stage("population.spatial.by_person.primary_locations")
+    df_activities = context.stage("synthesis.population.activities")
+    df_home, df_work, df_education = context.stage("synthesis.population.spatial.by_person.primary_locations")
 
     df_home = pd.merge(df_activities[df_activities["purpose"] == "home"][[
         "person_id", "activity_id"
@@ -35,7 +35,7 @@ def execute(context):
     df_locations = pd.merge(df_activities, df_locations, how = "left", on = ["person_id", "activity_id"])
 
     # Set unknown locations to home for the moment
-    df_home = context.stage("population.spatial.by_person.primary_locations")[0]
+    df_home = context.stage("synthesis.population.spatial.by_person.primary_locations")[0]
 
     df_home["home_x"] = df_home["x"]
     df_home["home_y"] = df_home["y"]

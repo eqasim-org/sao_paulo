@@ -5,9 +5,8 @@ import os.path
 import shapely.wkb as wkblib
 wkbfab = osm.geom.WKBFactory()
 
-def configure(context, require):
-    pass
-    
+def configure(context):
+    context.config("data_path")    
     
 class OSMHandler(osm.SimpleHandler):
     def __init__(self):
@@ -37,7 +36,7 @@ def execute(context):
 
     osmhandler = OSMHandler()
     # scan the input file and fills the handler list accordingly
-    osmhandler.apply_file("/nas/balacm/Airbus/SF/Sebastian/V1.0/sao_paulo/Data_SP/Data_SP/osm/sao_paulo.osm.pbf", locations=True)
+    osmhandler.apply_file("%s/osm/sao_paulo.osm.pbf" % context.config("data_path"), locations=True)
 
     # transform the list into a pandas DataFrame
     data_colnames = ['type', 'id', 'tagkey', 'tagvalue', 'x', 'y']

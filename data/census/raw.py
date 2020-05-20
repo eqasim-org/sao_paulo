@@ -3,22 +3,30 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import pyreadstat
-def configure(context, require):
-    pass
+
+def configure(context):
+    context.config("data_path")    
 
 def execute(context):
 
     columns = ['V0001', 'V0011', 'V0221', 'V0222', 'V0601', 'V6036', 'V0401', 'V1004', 'V0010', 'V0641', 'V0642', 'V0643', 'V0644', 'V0628', 'V6529', 'V0504']
-    reader = pyreadstat.read_file_in_chunks(pyreadstat.read_sav, "%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config["raw_data_path"], chunksize= 500000,usecols=columns)
-    df, meta = pyreadstat.read_sav("%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config["raw_data_path"], row_offset=1, row_limit=1,usecols=columns)
+
+    reader = pyreadstat.read_file_in_chunks(pyreadstat.read_sav, "%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config("data_path"), chunksize= 500000, usecols=columns)
+
+    df, meta = pyreadstat.read_sav("%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config("data_path"), row_offset=1, row_limit=1,usecols=columns)
+
     df_census = pd.DataFrame(columns = df.columns)
+    
     i = 500000
+
     for df, meta in reader:
+        print(df.groupby(["V0001"]).count())
     	#keep only those in Sao Paulo state
         df1 = df[df["V0001"] == '35']
         df_census = pd.concat([df_census, df1])
         print("Processed " + repr(i) + " samples.")
         i = i + 500000
+
     df_census.columns = ["federationCode", "areaCode", "householdWeight", "metropolitanRegion", "personNumber", "gender", "age", "goingToSchool", "employment", "onLeave", "helpsInWork", "farmWork",
 	"householdIncome", "motorcycleAvailability", "carAvailability", "numberOfMembers"]
     df_census['employment'] = df_census['employment'].fillna(2.0) #these are only children

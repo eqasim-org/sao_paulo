@@ -4,14 +4,15 @@ import numpy as np
 import geopandas as gpd
 import shapely.geometry as geo
 from simpledbf import Dbf5
+import time
 
-def configure(context, require):
-    require.stage("data.spatial.zones")
-
+def configure(context):
+    context.stage("data.spatial.zones")
+    context.config("data_path")    
 
 def execute(context):
 	
-    dbf = Dbf5("%s/HTS/OD_2017.dbf" %  context.config["raw_data_path"])
+    dbf = Dbf5("%s/HTS/OD_2017.dbf" %  context.config("data_path"))
     df = dbf.to_dataframe()
 	
     df_reduced = df[["ID_PESS","ZONA","IDADE","SEXO",
@@ -135,11 +136,11 @@ def execute(context):
     zone_id = df_persons["home_zone"].values.tolist()
 
      # Import shapefiles defining the different zones
-    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_center.shp" % context.config["raw_data_path"])
+    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_center.shp" % context.config("data_path"))
     center = center["AP_2010_CH"].values.tolist()
-    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config["raw_data_path"])
+    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config("data_path"))
     city = city["AP_2010_CH"].values.tolist()
-    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config["raw_data_path"])
+    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config("data_path"))
     county = county["AP_2010_CH"].values.tolist()
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
@@ -159,7 +160,8 @@ def execute(context):
     df_trips.loc[df_trips["destination_purpose"] == "errand", "destination_purpose"] = "other"
 
     df_trips.loc[df_trips["destination_purpose"].isna(), "destination_purpose"] = "other"
-    df_trips["purpose"] = df_trips["destination_purpose"].astype("category")
+    df_trips["following_purpose"] = df_trips["destination_purpose"].astype("category")
+    df_trips["preceeding_purpose"] = df_trips["origin_purpose"].astype("category")
     df_trips.loc[df_trips["mode"] == "motorcycle", "mode"] = "car"
     df_trips.loc[df_trips["mode"] == "taxi", "mode"] = "taxi"
     df_trips.loc[df_trips["mode"] == "ride_hailing", "mode"] = "taxi"
@@ -183,7 +185,7 @@ def execute(context):
     df_trips = df_trips[~first_index]
 
     # Remove trips that are the last done by an agent not returning to home
-    number_of_trips_per_agent = np.max(df_trips.groupby(["person_id"])["trip_id"])
+    number_of_trips_per_agent = df_trips.groupby(["person_id"], sort=False)["trip_id"].max()
     is_last_trip_index = [df_trips["trip_id"].iloc[i] == number_of_trips_per_agent[df_trips["person_id"].iloc[i]]  for i in range(len(df_trips)) ]
     last_index_list = df_trips.index[np.logical_and(is_last_trip_index, df_trips["destination_purpose"]!="home")] 
     last_index = df_trips.index.isin(last_index_list)
@@ -227,7 +229,7 @@ def execute(context):
 
     # Clean up
     df_trips = df_trips[[
-        "person_id", "trip_id", "new_trip_id", "purpose", "mode",
+        "person_id", "trip_id", "new_trip_id", "preceeding_purpose", "following_purpose", "mode",
         "departure_time", "arrival_time", "crowfly_distance", "activity_duration", "origin_x", "origin_y", "destination_x", "destination_y", "origin_zone", "destination_zone"
     ]]
     # Find everything that is consistent
@@ -244,18 +246,18 @@ def execute(context):
     df_persons["has_car_trip"] = df_persons["has_car_trip"].fillna(False)
 
     # Primary activity information
-    df_education = df_trips[df_trips["purpose"] == "education"][["person_id"]].drop_duplicates()
+    df_education = df_trips[df_trips["following_purpose"] == "education"][["person_id"]].drop_duplicates()
     df_education["has_education_trip"] = True
     df_persons = pd.merge(df_persons, df_education, how = "left")
     df_persons["has_education_trip"] = df_persons["has_education_trip"].fillna(False)
 
-    df_work = df_trips[df_trips["purpose"] == "work"][["person_id"]].drop_duplicates()
+    df_work = df_trips[df_trips["following_purpose"] == "work"][["person_id"]].drop_duplicates()
     df_work["has_work_trip"] = True
     df_persons = pd.merge(df_persons, df_work, how = "left")
     df_persons["has_work_trip"] = df_persons["has_work_trip"].fillna(False)
 
     # Find commute information
-    df_commute = df_trips[df_trips["purpose"].isin(["work", "education"])]
+    df_commute = df_trips[df_trips["following_purpose"].isin(["work", "education"])]
     df_commute = df_commute.sort_values(by = ["person_id", "crowfly_distance"])
     df_commute = df_commute.drop_duplicates("person_id", keep = "last")
 

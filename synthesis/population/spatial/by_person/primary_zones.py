@@ -21,10 +21,10 @@ def configure(context):
 # - 4. We can parallelize this stage easily!
 
 def execute(context):
-    df_persons = pd.DataFrame(context.stage("population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age"]], copy = True)
+    df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age"]], copy = True)
     df_persons = df_persons
 
-    df_trips = context.stage("population.trips")[["person_id", "following_purpose"]]
+    df_trips = context.stage("synthesis.population.trips")[["person_id", "following_purpose"]]
     df_work_od, df_education_od = context.stage("data.od.cleaned")
 
     df_home = df_persons[["person_id", "zone_id"]]

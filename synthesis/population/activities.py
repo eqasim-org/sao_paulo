@@ -3,12 +3,12 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 
-def configure(context, require):
-    require.stage("synthesis.sociodemographics")
-    require.stage("synthesis.trips")
+def configure(context):
+    context.stage("synthesis.population.sociodemographics")
+    context.stage("synthesis.population.trips")
 
 def execute(context):
-    df_trips = pd.DataFrame(context.stage("population.trips"), copy = True)
+    df_trips = pd.DataFrame(context.stage("synthesis.population.trips"), copy = True)
     df_trips.loc[:, "previous_trip_id"] = df_trips.loc[:, "trip_id"] - 1
 
     df_activities = pd.merge(
@@ -38,7 +38,7 @@ def execute(context):
     df_activities = df_activities.sort_values(by = ["person_id", "activity_id"])
 
     # We're still missing activities for people who don't have a any trips
-    df_persons = context.stage("population.sociodemographics")[["person_id"]]
+    df_persons = context.stage("synthesis.population.sociodemographics")[["person_id"]]
 
     missing_ids = set(np.unique(df_persons["person_id"])) - set(np.unique(df_activities["person_id"]))
     print("Found %d persons without activities" % len(missing_ids))

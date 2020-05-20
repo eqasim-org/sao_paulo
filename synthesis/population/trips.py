@@ -4,12 +4,12 @@ import pandas as pd
 import numpy as np
 #import data.constants as c
 
-def configure(context, require):
-    require.stage("synthesis.sociodemographics")
-    require.stage("data.hts.cleaned")
+def configure(context):
+    context.stage("synthesis.population.sociodemographics")
+    context.stage("data.hts.cleaned")
 
 def execute(context):
-    df_persons = context.stage("population.sociodemographics")[[
+    df_persons = context.stage("synthesis.population.sociodemographics")[[
         "person_id", "hts_person_id", "age"
     ]]
 
@@ -17,21 +17,18 @@ def execute(context):
     
     #df_trips = df_trips[df_trips["weekday"]]
     df_trips = df_trips[[
-        "person_id", "trip_id", "departure_time", "arrival_time", "mode", "purpose"
+        "person_id", "trip_id", "departure_time", "arrival_time", "mode", "preceeding_purpose", "following_purpose"
     ]]
-    df_trips.to_csv("%s/HTS/trips.csv" %  context.config["raw_data_path"])
+    df_trips.to_csv("%s/HTS/trips.csv" %  context.config("data_path"))
     assert(len(df_trips) == len(df_trips.dropna()))
 
-    #df_days = df_trips[["person_id", "day_id"]].groupby("person_id").first().reset_index()
-    #df_trips = pd.merge(df_days, df_trips, on = ["person_id", "day_id"])
-    #del df_trips["day_id"]
 
     # Collapse primary activities because they will get the same location
     consecutive_count = 1
 
     while consecutive_count > 0:
-        f = (df_trips[["person_id", "purpose"]].shift() == df_trips[["person_id", "purpose"]]).all(axis = 1)
-        f &= df_trips["purpose"].isin(["home", "work", "education"])
+        f = (df_trips[["person_id", "following_purpose"]].shift() == df_trips[["person_id", "following_purpose"]]).all(axis = 1)
+        f &= df_trips["following_purpose"].isin(["home", "work", "education"])
         df_trips = df_trips[~f]
         consecutive_count = np.count_nonzero(f)
         print("Collapsed %d consecutive primary activities" % consecutive_count)
@@ -40,7 +37,7 @@ def execute(context):
     df_trip_counts = df_trips[["person_id"]].groupby("person_id").size().reset_index(name = "count")
     df_trips["trip_id"] = np.hstack([np.arange(n) for n in df_trip_counts["count"].values])
 
-    df_trips.columns = ["hts_person_id", "trip_id", "departure_time", "arrival_time", "mode", "purpose"]
+    df_trips.columns = ["hts_person_id", "trip_id", "departure_time", "arrival_time", "mode", "preceeding_purpose", "following_purpose"]
 
     # Merge trips to persons
     df_trips = pd.merge(df_persons, df_trips)
@@ -58,10 +55,8 @@ def execute(context):
     assert((df_trips["travel_time"] >= 0).all())
 
     df_trips = df_trips[[
-        "person_id", "trip_id", "departure_time", "arrival_time", "travel_time", "mode", "purpose", "age", "hts_person_id"
+        "person_id", "trip_id", "departure_time", "arrival_time", "travel_time", "mode", "preceeding_purpose", "following_purpose", "age", "hts_person_id"
     ]]
-    df_trips["following_purpose"] = df_trips["purpose"]
-    del df_trips["purpose"]
 
     df_trips = df_trips.sort_values(by = ["person_id", "trip_id"])
 

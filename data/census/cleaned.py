@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import pyreadstat
-def configure(context, require):
-    require.stage("data.census.raw")
-    require.stage("data.spatial.zones")
 
+def configure(context):
+    context.stage("data.census.raw")
+    context.stage("data.spatial.zones")
 
 def execute(context):
     df_census = context.stage("data.census.raw")
@@ -27,11 +27,11 @@ def execute(context):
     
 
     # Import shapefiles defining the different zones
-    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_center.shp" % context.config["raw_data_path"])
+    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_center.shp" % context.config("data_path"))
     center = center["AP_2010_CH"].values.tolist()
-    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config["raw_data_path"])
+    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config("data_path"))
     city = city["AP_2010_CH"].values.tolist()
-    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config["raw_data_path"])
+    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config("data_path"))
     county = county["AP_2010_CH"].values.tolist()
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise

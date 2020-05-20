@@ -29,7 +29,7 @@ def execute(context):
     
     ## read the educational facilities and attach them to the opportunities
     
-    df_education = pd.read_csv("%s/escolas_enderecos.csv" % context.config["raw_data_path"])
+    df_education = pd.read_csv("%s/escolas_enderecos.csv" % context.config("data_path"))
     df_education.rename(columns={'LATITUDE':'y', 'LONGITUDE':'x'}, inplace=True)
     df_facilities_education = df_education[['x', 'y']].copy()
 

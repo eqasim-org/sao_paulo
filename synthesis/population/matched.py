@@ -5,12 +5,13 @@ import synthesis.population.algo.hot_deck_matching
 def configure(context):
     context.stage("synthesis.population.sampled")
     context.stage("data.hts.cleaned")
+    context.config("processes")
 
 MINIMUM_SOURCE_SAMPLES = 20
 
 def execute(context):
     df_hts = context.stage("data.hts.cleaned")[0]
-    number_of_threads = context.config["hdm_threads"]
+    number_of_threads = context.config("processes")
 
     # Source: HTS
     df_source = df_hts

@@ -19,6 +19,9 @@ def configure(context):
     context.stage("synthesis.destinations")
     context.stage("synthesis.population.sociodemographics")
     context.stage("synthesis.population.trips")
+    context.stage("synthesis.destinations")
+    context.config("processes")
+    context.stage("data.hts.cleaned")
 
 SAMPLE_SIZE = 1000
 
@@ -143,7 +146,7 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
 
     home_coordinates_cp = list(zip(df_agents_cp["home_x"], df_agents_cp["home_y"]))
     home_coordinates_ncp = list(zip(df_agents_ncp["home_x"], df_agents_ncp["home_y"]))
-    education_coordinates = list(zip(df_candidates["x"], df_candidates["y"]))
+    education_coordinates = np.array(list(zip(df_candidates["x"], df_candidates["y"])))
 
     bin_midpoints = bins_cp[:-1] + np.diff(bins_cp)/2
     cdf = np.cumsum(hist_cp)
@@ -202,6 +205,7 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
     df_return = pd.concat([df_return_cp, df_return_ncp])
     assert len(df_return) == len(df_agents)
     return df_return
+
 def parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, age_min, age_max, name, func, n_cores=24):
     df_split = np.array_split(df_ag, n_cores)
     print("parallelize")
@@ -224,7 +228,7 @@ def impute_work_locations_same_zone(hts_trips, df_ag, df_candidates, df_travel, 
     df_agents_cp  = df_agents#[np.isin(df_agents["hts_person_id"], cp_ids)]
 
     home_coordinates_cp = list(zip(df_agents_cp["home_x"], df_agents_cp["home_y"]))
-    work_coordinates = list(zip(df_candidates["x"], df_candidates["y"]))
+    work_coordinates = np.array(list(zip(df_candidates["x"], df_candidates["y"])))
 
     bin_midpoints = bins_cp[:-1] + np.diff(bins_cp)/2
     cdf = np.cumsum(hist_cp)
@@ -259,20 +263,20 @@ def impute_work_locations_same_zone(hts_trips, df_ag, df_candidates, df_travel, 
     return df_return
 
 def execute(context):
-    threads = context.config["threads"]
+    threads = context.config("processes")
     df_zones = context.stage("data.spatial.zones")[0][["zone_id", "geometry"]]
     df_commune_zones = context.stage("data.spatial.zones")[0]
     df_zones["zone_id"] = df_zones["zone_id"].astype(np.int)
     df_commune_zones["zone_id"] = df_commune_zones["zone_id"].astype(np.int)
     
     #df_commune_zones = df_commune_zones[df_commune_zones["zone_level"] == "commune"][["zone_id", "geometry"]]
-    df_opportunities = context.stage("population.opportunities")
+    df_opportunities = context.stage("synthesis.destinations")
     df_opportunities["zone_id"] = df_opportunities["zone_id"].astype(np.int)
-    df_commute = context.stage("population.sociodemographics")[["person_id", "commute_distance", "hts_person_id"]]
+    df_commute = context.stage("synthesis.population.sociodemographics")[["person_id", "commute_distance", "hts_person_id"]]
 
     
     print("Imputing home locations ...")
-    df_households = context.stage("population.spatial.by_person.primary_zones")[0]
+    df_households = context.stage("synthesis.population.spatial.by_person.primary_zones")[0]
     df_home_opportunities = df_opportunities[df_opportunities["offers_home"]]
 
     df_home = impute_locations(df_households, df_zones, df_home_opportunities, threads, "person_id")[["person_id", "x", "y", "location_id"]]
@@ -287,48 +291,48 @@ def execute(context):
     #del df_home["pt_zone_id"]
     print("\n\n\n\n\n\n\n\n\n\n\n\n")
     print("Imputing education locations ...")
-    df_persons = context.stage("population.spatial.by_person.primary_zones")[2]
+    df_persons = context.stage("synthesis.population.spatial.by_person.primary_zones")[2]
     df_persons = pd.merge(df_persons, df_commute)
     df_persons = pd.merge(df_persons, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1))
     
     df_persons_same_zone = pd.merge(df_persons,df_households,on=["person_id"], how='left')
     #df_persons_same_zone = df_persons_same_zone[df_persons_same_zone["zone_id_x"]==df_persons_same_zone["zone_id_y"]]
-    df_education_locations = context.stage("population.opportunities")
+    df_education_locations = context.stage("synthesis.destinations")
     df_candidates = df_education_locations[df_education_locations["offers_education"]]
     #f_persons = (df_persons_same_zone["zone_id_x"] == df_persons_same_zone["zone_id_y"])
         
     df_hts_trips = context.stage("data.hts.cleaned")[1]
     df_hts_persons = context.stage("data.hts.cleaned")[0]
     df_hts = pd.merge(df_hts_trips, df_hts_persons, on=["person_id"])
-    hts_trips_educ = df_hts[df_hts["purpose"]=="education"]
+    hts_trips_educ = df_hts[df_hts["following_purpose"]=="education"]
 
     df_agents = df_persons_same_zone.copy()
-    df_trips = context.stage("population.trips")
+    df_trips = context.stage("synthesis.population.trips")
 
     df_travel = df_trips.copy()
     df_travel = df_travel[np.logical_and(df_travel["age"] >= 0, df_travel["age"] < 14)]
     df_ag = df_agents.copy()
     df_ag = df_ag[np.logical_and(df_ag["age"] >= 0, df_ag["age"] < 14)]
     
-    educ_0_14 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 0,  14, "/nas/balacm/educ014.png", impute_education_locations_same_zone, 24)
+    educ_0_14 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 0,  14, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 24)
     print("finished first")
     df_travel = df_trips.copy()
     df_travel = df_travel[np.logical_and(df_travel["age"] >= 14, df_travel["age"] < 18)]
     df_ag = df_agents.copy()
     df_ag = df_ag[np.logical_and(df_ag["age"] >= 14, df_ag["age"] < 18)]
-    educ_14_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 14,  18, "/nas/balacm/educ1418.png", impute_education_locations_same_zone, 24)
+    educ_14_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 14,  18, "/home/asallard/Scenarios/educ1418.png", impute_education_locations_same_zone, 24)
     
     df_travel = df_trips.copy()
     df_travel = df_travel[np.logical_and(df_travel["age"] >= 18, df_travel["age"] < 30)]
     df_ag = df_agents.copy()
     df_ag = df_ag[np.logical_and(df_ag["age"] >= 18, df_ag["age"] < 30)]
-    educ_above_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 18,  30, "/nas/balacm/educabove18.png", impute_education_locations_same_zone, 24)
+    educ_above_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 18,  30, "/home/asallard/Scenarios/educabove18.png", impute_education_locations_same_zone, 24)
     
     df_travel = df_trips.copy()
     df_travel = df_travel[np.logical_and(df_travel["age"] >= 30, df_travel["age"] < 1000)]
     df_ag = df_agents.copy()
     df_ag = df_ag[np.logical_and(df_ag["age"] >= 30, df_ag["age"] < 1000)]
-    educ_above_30 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 30,  1000, "/nas/balacm/educabove18.png", impute_education_locations_same_zone, 24)
+    educ_above_30 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 30,  1000, "/home/asallard/Scenarios/educabove30.png", impute_education_locations_same_zone, 24)
 
     education_locations = pd.concat([educ_0_14, educ_14_18, educ_above_18, educ_above_30])
     #education_locations = educ_0_14
@@ -347,7 +351,7 @@ def execute(context):
     
     print("Imputing work locations ...")
     #for those in the same zone find a location near-by
-    df_work_zones =  context.stage("population.spatial.by_person.primary_zones")[1]
+    df_work_zones =  context.stage("synthesis.population.spatial.by_person.primary_zones")[1]
     df_work_zones = pd.merge(df_work_zones, df_commute)
     df_work_zones = pd.merge(df_work_zones, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1))
     df_work_locations = df_opportunities[df_opportunities["offers_work"]]
@@ -370,13 +374,13 @@ def execute(context):
     df_hts_trips = context.stage("data.hts.cleaned")[1]
     df_hts_persons = context.stage("data.hts.cleaned")[0]
     df_hts = pd.merge(df_hts_trips, df_hts_persons, on=["person_id"])
-    hts_trips_work = df_hts[df_hts["purpose"] == "work"]
+    hts_trips_work = df_hts[df_hts["following_purpose"] == "work"]
     hts_trips_work = hts_trips_work[hts_trips_work["origin_zone"] == hts_trips_work["destination_zone"]]
     df_agents = df_work_same_zone.copy()
-    df_trips = context.stage("population.trips")
+    df_trips = context.stage("synthesis.population.trips")
     print("Imputing work same-zone  locations ...")
 
-    work_locations = impute_work_locations_same_zone(hts_trips_work, df_agents, df_candidates, df_trips, "/nas/balacm/work.png")
+    work_locations = impute_work_locations_same_zone(hts_trips_work, df_agents, df_candidates, df_trips, "/home/asallard/Scenarios/work.png")
     df_work_same_zone = work_locations[["person_id", "x", "y", "location_id"]]
     
     

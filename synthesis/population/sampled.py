@@ -3,6 +3,7 @@ import numpy as np
 
 def configure(context):
     context.stage("data.census.cleaned")
+    context.config("sampling_rate")
 
 def execute(context):
     df_census = context.stage("data.census.cleaned").sort_values(by = "household_id")
@@ -29,8 +30,8 @@ def execute(context):
     multiplied_household_count = int(np.sum(household_multiplicators))
     df_census.loc[:, "household_id"] = np.repeat(np.arange(multiplied_household_count), multiplied_household_sizes)
 
-    if "input_downsampling" in context.config:
-        probability = context.config["input_downsampling"]
+    if context.config("sampling_rate"):
+        probability = context.config("sampling_rate")
         print("Downsampling (%f)" % probability)
 
         household_ids = np.unique(df_census["household_id"])

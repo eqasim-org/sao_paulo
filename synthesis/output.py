@@ -29,7 +29,7 @@ def execute(context):
     df_households = df_households[[
         "household_id",
         "binary_car_availability",
-        "income"
+        "hhlIncome"
     ]]
 
     df_households.to_csv("%s/households.csv" % output_path, sep = ";", index = None)
@@ -81,7 +81,7 @@ def execute(context):
         "person_id", "trip_id",
         "preceeding_activity_index", "following_activity_index",
         "departure_time", "arrival_time", "mode",
-        #"preceeding_purpose", 
+        "preceeding_purpose", 
         "following_purpose",
         #"is_first", "is_last"
     ]]
@@ -90,8 +90,9 @@ def execute(context):
 
     # Prepare spatial data sets
     df_locations = context.stage("synthesis.population.spatial.locations")[[
-        "person_id", "activity_id", "geometry"
+        "person_id", "activity_id", "x", "y"
     ]]
+    df_locations["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_locations["x"].values.tolist(), df_locations["y"].values.tolist()))]
 
     df_activities = pd.merge(df_activities, df_locations[[
         "person_id", "activity_id", "geometry"
@@ -104,16 +105,16 @@ def execute(context):
 
     # Write spatial trips
     df_spatial = pd.merge(df_trips, df_locations[[
-        "person_id", "activity_index", "geometry"
+        "person_id", "activity_id", "geometry"
     ]].rename(columns = {
-        "activity_index": "preceeding_activity_index",
+        "activity_id": "preceeding_activity_index",
         "geometry": "preceeding_geometry"
     }), how = "left", on = ["person_id", "preceeding_activity_index"])
 
     df_spatial = pd.merge(df_spatial, df_locations[[
-        "person_id", "activity_index", "geometry"
+        "person_id", "activity_id", "geometry"
     ]].rename(columns = {
-        "activity_index": "following_activity_index",
+        "activity_id": "following_activity_index",
         "geometry": "following_geometry"
     }), how = "left", on = ["person_id", "following_activity_index"])
 
@@ -124,6 +125,8 @@ def execute(context):
 
     df_spatial = df_spatial.drop(columns = ["preceeding_geometry", "following_geometry"])
 
+    print(df_spatial.columns)
+
     df_spatial = gpd.GeoDataFrame(df_spatial, crs = dict(init = "epsg:29183"))
     df_spatial["following_purpose"] = df_spatial["following_purpose"].astype(str)
     df_spatial["preceeding_purpose"] = df_spatial["preceeding_purpose"].astype(str)
@@ -133,7 +136,6 @@ def execute(context):
     # Write meta information
     information = dict(
         sampling_rate = context.config("sampling_rate"),
-        hts = context.config("hts"),
         random_seed = context.config("random_seed"),
         created = datetime.datetime.now(datetime.timezone.utc).isoformat()
     )
