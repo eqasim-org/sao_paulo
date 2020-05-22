@@ -7,8 +7,9 @@ working_directory: /home/asallard/Scenarios/Sao_Paulo/cache
 # This section defines which parts of the pipeline should be run
 run:
   #- data.census.raw
-  - data.hts.cleaned
-  - synthesis.population.trips
+  #- data.hts.cleaned
+  #- synthesis.population.trips
+  #- synthesis.population.spatial.by_person.primary_zones
   - synthesis.output # To create the output population in the output_path (see below)
   #- matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
 
@@ -16,9 +17,6 @@ run:
 config:
   # Some general configuration
   processes: 4
-
-  # Define whether to use ENTD or EGT as the household travel survey (HTS)
-  hts: entd
 
   # Define sampling rate and random seed for the output population
   sampling_rate: 0.01

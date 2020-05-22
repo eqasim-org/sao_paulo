@@ -21,23 +21,14 @@ def configure(context):
 # - 4. We can parallelize this stage easily!
 
 def execute(context):
-    df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age"]], copy = True)
+    df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age", "household_id"]], copy = True)
     df_persons = df_persons
 
     df_trips = context.stage("synthesis.population.trips")[["person_id", "following_purpose"]]
     df_work_od, df_education_od = context.stage("data.od.cleaned")
 
-    df_home = df_persons[["person_id", "zone_id"]]
-    #df_home.columns = ["census_person_id", "zone_id"]
-
-    # First, home zones
-    #print("Attaching home zones ...")
-    #df_households = df_persons #.drop_duplicates("household_id")
-    #df_households = pd.merge(df_households, df_home, on = "census_person_id", how = "left")
-    #assert(not df_households["census_person_id"].isna().any())
-    #df_home = df_households[["household_id", "zone_id"]]
-
-    #df_persons = pd.merge(df_persons, df_households[["household_id", "zone_id"]], on = "household_id")
+    df_home = df_persons[["person_id", "zone_id", "household_id"]]
+    print(df_home.columns)
 
     # Second, work zones
     df_work = []

@@ -90,18 +90,10 @@ def execute(context):
     #remove all things that are na and that could affect later stages
     df_cleaned = df_reduced.dropna(subset = columnsToClean, inplace = False)
    
-    
-                     
-                     
-   	
-	
 
     print("Filling %d/%d observations with number_of_cars = 0" % (np.sum(df_persons["number_of_cars"].isna()), len(df_persons)))
     df_persons["number_of_cars"] = df_persons["number_of_cars"].fillna(0.0)
     df_persons["number_of_cars"] = df_persons["number_of_cars"].astype(np.int)
-
-    #print("Removing %d/%d observations with NaN personal_income" % (np.sum(df_persons["personal_income"].isna()), len(df_persons)))
-    #df_persons = df_persons[~df_persons["personal_income"].isna()]
 
     # ID and weight
     #df_persons.loc[:, "person_id"] = df_persons["observation"]
@@ -115,15 +107,11 @@ def execute(context):
     df_persons.loc[df_persons["trip_paid_by"] == 2.0, "has_pt_subscription"] = True
 
     df_persons["employment"] = df_persons["employed"]
-    #df_persons.loc[df_persons["__employment"] == 1, "employment"] = "yes"
-    #df_persons.loc[df_persons["__employment"] == 2, "employment"] = "no"
-    #df_persons.loc[df_persons["__employment"] == 3, "employment"] = "student"
     df_persons["employment"] = df_persons["employment"].astype("category")
 
     df_persons["age"] = df_persons["age"].astype(np.int)
     df_persons["binary_car_availability"] = df_persons["number_of_cars"] > 0
     df_persons["income"] = df_persons["personal_income"]
-    print(df_persons.shape)
     
     df_zones = context.stage("data.spatial.zones")[0][["zone_id", "geometry"]]
     df_persons["geometry"] = [geo.Point(*xy) for xy in zip(df_persons["homeCoordX"], df_persons["homeCoordY"])]
@@ -145,13 +133,13 @@ def execute(context):
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in county and z not in city) for z in zone_id]
-    df_persons["area_id"] = sp_area
+    df_persons["residence_area_index"] = sp_area
 
 
     # Clean up
     df_persons = df_persons[[
         "person_id", "weight",
-        "age", "sex", "employment", "binary_car_availability", "has_pt_subscription", "home_zone", "household_income", "area_id"
+        "age", "sex", "employment", "binary_car_availability", "has_pt_subscription", "home_zone", "household_income", "residence_area_index"
     ]]
 
     # Trips
@@ -232,10 +220,14 @@ def execute(context):
         "person_id", "trip_id", "new_trip_id", "preceeding_purpose", "following_purpose", "mode",
         "departure_time", "arrival_time", "crowfly_distance", "activity_duration", "origin_x", "origin_y", "destination_x", "destination_y", "origin_zone", "destination_zone"
     ]]
-    # Find everything that is consistent
-    #existing_ids = set(np.unique(df_persons["person_id"])) & set(np.unique(df_trips["person_id"]))
-    #df_persons = df_persons[df_persons["person_id"].isin(existing_ids)]
-    #df_trips = df_trips[df_trips["person_id"].isin(existing_ids)]
+
+    sameX = df_trips.index[df_trips["origin_x"] == df_trips["destination_x"]].tolist()
+    sameX = df_trips.index.isin(sameX)
+    sameY = df_trips.index[df_trips["origin_y"] == df_trips["destination_y"]].tolist() 
+    sameY = df_trips.index.isin(sameX)
+    same_loc = np.logical_and(sameX, sameY)
+    df_trips[~same_loc]
+
 
     #### From here everything as Paris
 

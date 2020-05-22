@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 from scipy.spatial import cKDTree
 from functools import partial
+import time
 
 #import data.spatial.pt_zone
 
@@ -269,7 +270,6 @@ def execute(context):
     df_zones["zone_id"] = df_zones["zone_id"].astype(np.int)
     df_commune_zones["zone_id"] = df_commune_zones["zone_id"].astype(np.int)
     
-    #df_commune_zones = df_commune_zones[df_commune_zones["zone_level"] == "commune"][["zone_id", "geometry"]]
     df_opportunities = context.stage("synthesis.destinations")
     df_opportunities["zone_id"] = df_opportunities["zone_id"].astype(np.int)
     df_commute = context.stage("synthesis.population.sociodemographics")[["person_id", "commute_distance", "hts_person_id"]]
@@ -281,14 +281,9 @@ def execute(context):
 
     df_home = impute_locations(df_households, df_zones, df_home_opportunities, threads, "person_id")[["person_id", "x", "y", "location_id"]]
 
-    #print("Imputing pt zone id ...")
-    #df_pt_zones = context.stage("data.spatial.pt_zone")
-    #data.spatial.pt_zone.impute(df_home, df_pt_zones)
+    df_home = pd.merge(df_home, df_households[["person_id", "household_id"]], on = ["person_id"], how = 'left')
 
-    #df_home["residence_zone_category"] = 1
-    #df_home.loc[df_home["pt_zone_id"].isin([2,3]), "residence_zone_category"] = 2
-    #df_home.loc[df_home["pt_zone_id"].isin([4,5]), "residence_zone_category"] = 3
-    #del df_home["pt_zone_id"]
+
     print("\n\n\n\n\n\n\n\n\n\n\n\n")
     print("Imputing education locations ...")
     df_persons = context.stage("synthesis.population.spatial.by_person.primary_zones")[2]
@@ -296,10 +291,8 @@ def execute(context):
     df_persons = pd.merge(df_persons, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1))
     
     df_persons_same_zone = pd.merge(df_persons,df_households,on=["person_id"], how='left')
-    #df_persons_same_zone = df_persons_same_zone[df_persons_same_zone["zone_id_x"]==df_persons_same_zone["zone_id_y"]]
     df_education_locations = context.stage("synthesis.destinations")
     df_candidates = df_education_locations[df_education_locations["offers_education"]]
-    #f_persons = (df_persons_same_zone["zone_id_x"] == df_persons_same_zone["zone_id_y"])
         
     df_hts_trips = context.stage("data.hts.cleaned")[1]
     df_hts_persons = context.stage("data.hts.cleaned")[0]
@@ -337,14 +330,6 @@ def execute(context):
     education_locations = pd.concat([educ_0_14, educ_14_18, educ_above_18, educ_above_30])
     #education_locations = educ_0_14
     df_persons_same_zone = education_locations[["person_id", "x", "y", "location_id"]]
-
-    #df_persons_different_zone =  pd.merge(df_persons,df_households,on=["person_id"], how='left')
-    #df_persons_different_zone = df_persons_different_zone[df_persons_different_zone["zone_id_x"]!=df_persons_different_zone["zone_id_y"]]
-    #df_persons_different_zone.rename(columns={"zone_id_x" : "zone_id"},inplace=True)
-
-    #df_education_opportunities = df_opportunities[df_opportunities["offers_education"]]
-    #df_education = impute_locations(df_persons_different_zone, df_commune_zones, df_education_opportunities, threads)[["person_id", "x", "y", "location_id"]]
-    #df_education = df_education.append(df_persons_same_zone)
 
     df_education = df_persons_same_zone
     

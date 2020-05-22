@@ -7,16 +7,16 @@ def configure(context):
 
 def execute(context):
     df_census = context.stage("data.census.cleaned").sort_values(by = "household_id")
-    df_census["numberOfMembers"] = df_census["numberOfMembers"].astype(np.int)
+    df_census["household_size"] = df_census["household_size"].astype(np.int)
     # Find rounded multiplicators for the households
     df_weighting = df_census[[
-        "household_id", "weight", "numberOfMembers"
+        "household_id", "weight", "household_size"
     ]].groupby("household_id").first().reset_index()
     df_weighting["multiplicator"] = np.round(df_weighting["weight"]).astype(np.int)
-    df_weighting = df_weighting[["household_id", "multiplicator", "numberOfMembers"]]
+    df_weighting = df_weighting[["household_id", "multiplicator", "household_size"]]
 
     household_multiplicators = df_weighting["multiplicator"].values
-    household_sizes = df_weighting["numberOfMembers"].values
+    household_sizes = df_weighting["household_size"].values
 
     person_muliplicators = np.repeat(household_multiplicators, household_sizes)
     df_census = df_census.iloc[np.repeat(np.arange(len(df_census)), person_muliplicators)]

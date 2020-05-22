@@ -27,7 +27,7 @@ def execute(context):
     df_source["age_class"] = np.digitize(df_source["age"], AGE_BOUNDARIES, right = True)
 
     INCOME_BOUNDARIES = [ 2000.0, 2900.0, 4150.0, 6580.0, np.inf]
-    df_target["income_class"] = np.digitize(df_target["hhlIncome"], INCOME_BOUNDARIES, right = True)
+    df_target["income_class"] = np.digitize(df_target["household_income"], INCOME_BOUNDARIES, right = True)
     df_source["income_class"] = np.digitize(df_source["household_income"], INCOME_BOUNDARIES, right = True)
 
     synthesis.population.algo.hot_deck_matching.run(
@@ -35,7 +35,7 @@ def execute(context):
         df_source, "person_id",
         "weight",
         ["age_class", "sex", "binary_car_availability","employment"],
-        ["area_id"],
+        ["residence_area_index"],
         runners = number_of_threads,
         minimum_source_samples = 5
     )

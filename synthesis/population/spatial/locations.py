@@ -8,10 +8,12 @@ import pandas as pd
 def configure(context):
     context.stage("synthesis.population.activities")
     context.stage("synthesis.population.spatial.by_person.primary_locations")
+    context.stage("synthesis.population.spatial.by_person.secondary.locations")
 
 def execute(context):
     df_activities = context.stage("synthesis.population.activities")
     df_home, df_work, df_education = context.stage("synthesis.population.spatial.by_person.primary_locations")
+    df_secondary = context.stage("synthesis.population.spatial.by_person.secondary.locations")
 
     df_home = pd.merge(df_activities[df_activities["purpose"] == "home"][[
         "person_id", "activity_id"
@@ -48,5 +50,26 @@ def execute(context):
     df_locations.loc[f, "y"] = df_locations.loc[f, "home_y"]
 
     df_locations = df_locations[["person_id", "activity_id", "x", "y", "location_id"]]
+
+    # Secondary locations
+    df_secondary_locations = df_locations[~df_locations["purpose"].isin(("home", "work", "education"))].copy()
+    df_secondary["activity_index"] = df_secondary["trip_index"] + 1
+    df_secondary_locations = pd.merge(df_secondary_locations, df_secondary[[
+        "person_id", "activity_index", "destination_id", "geometry"
+    ]], on = ["person_id", "activity_index"], how = "left")
+    df_secondary_locations = df_secondary_locations[["person_id", "activity_index", "destination_id", "geometry"]]
+
+    # Validation
+    initial_count = len(df_locations)
+    df_locations = pd.concat([df_home_locations, df_work_locations, df_education_locations, df_secondary_locations])
+
+    df_locations = df_locations.sort_values(by = ["person_id", "activity_index"])
+    final_count = len(df_locations)
+
+    assert initial_count == final_count
+
+    df_locations = gpd.GeoDataFrame(df_locations, crs = dict(init = "epsg:2154"))
+
+    return df_locations
     
     return df_locations

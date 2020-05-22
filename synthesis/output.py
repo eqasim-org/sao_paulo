@@ -29,7 +29,7 @@ def execute(context):
     df_households = df_households[[
         "household_id",
         "binary_car_availability",
-        "hhlIncome"
+        "household_income"
     ]]
 
     df_households.to_csv("%s/households.csv" % output_path, sep = ";", index = None)
