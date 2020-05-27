@@ -43,8 +43,6 @@ class AssignmentSolver:
 
     def solve(self, problem):
         best_result = None
-        if problem["origin"] == problem["destination"]:
-            print("Hallo")
 
         for assignment_iteration in range(self.maximum_iterations):
             distance_result = self.distance_sampler.sample(problem)

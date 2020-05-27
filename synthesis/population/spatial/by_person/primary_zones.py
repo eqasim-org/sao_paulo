@@ -5,6 +5,7 @@ import numpy as np
 #import data.constants as c
 import shapely.geometry as geo
 import multiprocessing as mp
+import time
 
 def configure(context):
     context.stage("data.od.cleaned")
@@ -28,7 +29,6 @@ def execute(context):
     df_work_od, df_education_od = context.stage("data.od.cleaned")
 
     df_home = df_persons[["person_id", "zone_id", "household_id"]]
-    print(df_home.columns)
 
     # Second, work zones
     df_work = []
@@ -60,19 +60,7 @@ def execute(context):
             indices = np.repeat(np.arange(len(df_destination)), counts)
             df_origin.loc[:, "zone_id"] = df_destination.iloc[indices]["destination_id"].values
             df_education.append(df_origin[["person_id", "zone_id", "age"]])
-            
-       
-            
+           
     df_education = pd.concat(df_education)
-
-    # Impute zones
-    #df_zones = context.stage("data.spatial.zones")
-    #df_zones = df_zones[df_zones["zone_level"] == "commune"]
-
-    #df_work = pd.merge(df_work, df_zones[["zone_id", "zone_id"]], on = "zone_id")
-    #df_education = pd.merge(df_education, df_zones[["zone_id", "zone_id"]], on = "zone_id")
-
-    #df_work = df_work[["person_id", "zone_id"]]
-    #df_education = df_education[["person_id", "zone_id"]]
 
     return df_home, df_work, df_education

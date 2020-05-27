@@ -90,9 +90,9 @@ def execute(context):
 
     # Prepare spatial data sets
     df_locations = context.stage("synthesis.population.spatial.locations")[[
-        "person_id", "activity_id", "x", "y"
+        "person_id", "activity_id", "geometry"
     ]]
-    df_locations["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_locations["x"].values.tolist(), df_locations["y"].values.tolist()))]
+    #df_locations["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_locations["x"].values.tolist(), df_locations["y"].values.tolist()))]
 
     df_activities = pd.merge(df_activities, df_locations[[
         "person_id", "activity_id", "geometry"

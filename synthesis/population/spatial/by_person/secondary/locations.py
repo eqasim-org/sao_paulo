@@ -3,11 +3,12 @@ import pandas as pd
 import multiprocessing as mp
 import shapely.geometry as geo
 import geopandas as gpd
-
+import time
 from synthesis.population.spatial.by_person.secondary.problems import find_assignment_problems
 
 def configure(context):
     context.stage("synthesis.population.trips")
+    context.stage("synthesis.population.sociodemographics")
     context.stage("synthesis.population.sampled")
     context.stage("synthesis.population.spatial.by_person.primary_locations")
 
@@ -27,8 +28,8 @@ def prepare_locations(context):
 
     df_education["education"] = [geo.Point(px,py) for px, py in list(zip(df_education["x"].values.tolist(), df_education["y"].values.tolist()))]
 
-    df_locations = context.stage("synthesis.population.sampled")[["person_id", "household_id"]]
-    df_locations = pd.merge(df_locations, df_home[["household_id", "home"]], how = "left", on = "household_id")
+    df_persons = context.stage("synthesis.population.sampled")[["person_id", "household_id"]]
+    df_locations = pd.merge(df_home, df_persons, how = "left", on = ["person_id", "household_id"])
     df_locations = pd.merge(df_locations, df_work[["person_id", "work"]], how = "left", on = "person_id")
     df_locations = pd.merge(df_locations, df_education[["person_id", "education"]], how = "left", on = "person_id")
 
@@ -75,6 +76,7 @@ def execute(context):
     df_trips = context.stage("synthesis.population.trips").sort_values(by = ["person_id", "trip_id"])
 
     df_trips["travel_time"] = df_trips["arrival_time"] - df_trips["departure_time"]
+
     df_primary = prepare_locations(context)
 
     # Prepare data
@@ -127,6 +129,7 @@ def execute(context):
 
 def process(context, arguments):
   df_trips, df_primary, random_seed = arguments
+    
 
   # Set up RNG
   random = np.random.RandomState(context.config("random_seed"))
@@ -167,7 +170,7 @@ def process(context, arguments):
 
   last_person_id = None
 
-  for problem in find_assignment_problems(df_trips, df_primary):
+  for problem in find_assignment_problems(df_trips, df_primary):    
       result = assignment_solver.solve(problem)
 
       starting_trip_index = problem["trip_index"]

@@ -19,6 +19,7 @@ def configure(context):
     context.stage("data.spatial.zones")
     context.stage("synthesis.destinations")
     context.stage("synthesis.population.sociodemographics")
+    context.stage("synthesis.population.sampled")
     context.stage("synthesis.population.trips")
     context.stage("synthesis.destinations")
     context.config("processes")
@@ -276,21 +277,32 @@ def execute(context):
 
     
     print("Imputing home locations ...")
-    df_households = context.stage("synthesis.population.spatial.by_person.primary_zones")[0]
+    df_households = context.stage("synthesis.population.spatial.by_person.primary_zones")[0].copy()
+
+    df_hhl = context.stage("synthesis.population.sampled").drop_duplicates("household_id")[[
+        "household_id", "zone_id"
+    ]].copy()
+    df_hhl.rename(columns={"household_id":"person_id"}, inplace = True)
     df_home_opportunities = df_opportunities[df_opportunities["offers_home"]]
 
-    df_home = impute_locations(df_households, df_zones, df_home_opportunities, threads, "person_id")[["person_id", "x", "y", "location_id"]]
+    df_home = impute_locations(df_hhl, df_zones, df_home_opportunities, threads, "person_id")[["person_id", "x", "y", "location_id"]]
+    df_home.rename(columns = {"person_id":"household_id"}, inplace = True)
+    df_hhl = context.stage("synthesis.population.sampled")
+    df_home = pd.merge(df_hhl, df_home, on = ["household_id"], how = "left")
 
-    df_home = pd.merge(df_home, df_households[["person_id", "household_id"]], on = ["person_id"], how = 'left')
+    df_home = pd.merge(df_home, df_households[["person_id", "household_id"]], on = ["person_id", "household_id"], how = 'left')
 
 
     print("\n\n\n\n\n\n\n\n\n\n\n\n")
     print("Imputing education locations ...")
     df_persons = context.stage("synthesis.population.spatial.by_person.primary_zones")[2]
+    df_persons.rename(columns = {"zone_id":"education_id"}, inplace = True) 
+
     df_persons = pd.merge(df_persons, df_commute)
-    df_persons = pd.merge(df_persons, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1))
+    df_persons = pd.merge(df_persons, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1), on = ["person_id"])
+    df_persons["age"] = df_persons["age_x"]
     
-    df_persons_same_zone = pd.merge(df_persons,df_households,on=["person_id"], how='left')
+    df_persons_same_zone = pd.merge(df_persons,df_households,on=["person_id", "household_id"], how='left')
     df_education_locations = context.stage("synthesis.destinations")
     df_candidates = df_education_locations[df_education_locations["offers_education"]]
         
@@ -308,7 +320,7 @@ def execute(context):
     df_ag = df_ag[np.logical_and(df_ag["age"] >= 0, df_ag["age"] < 14)]
     
     educ_0_14 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 0,  14, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 24)
-    print("finished first")
+
     df_travel = df_trips.copy()
     df_travel = df_travel[np.logical_and(df_travel["age"] >= 14, df_travel["age"] < 18)]
     df_ag = df_agents.copy()
@@ -328,28 +340,30 @@ def execute(context):
     educ_above_30 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 30,  1000, "/home/asallard/Scenarios/educabove30.png", impute_education_locations_same_zone, 24)
 
     education_locations = pd.concat([educ_0_14, educ_14_18, educ_above_18, educ_above_30])
-    #education_locations = educ_0_14
     df_persons_same_zone = education_locations[["person_id", "x", "y", "location_id"]]
 
-    df_education = df_persons_same_zone
-    
+    df_education = df_persons_same_zone    
     
     print("Imputing work locations ...")
-    #for those in the same zone find a location near-by
-    df_work_zones =  context.stage("synthesis.population.spatial.by_person.primary_zones")[1]
-    df_work_zones = pd.merge(df_work_zones, df_commute)
+    df_households =  context.stage("synthesis.population.spatial.by_person.primary_zones")[0].copy()
+    df_work_zones =  context.stage("synthesis.population.spatial.by_person.primary_zones")[1].copy()
+ 
+    df_hw =  pd.merge(df_work_zones.rename(columns = {"zone_id":"work_id"}) , df_households.rename(columns = {"zone_id":"home_id"}), on=["person_id"], how='left')
+
+    df_work_zones = pd.merge(df_hw, df_commute)
     df_work_zones = pd.merge(df_work_zones, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1))
-    df_work_locations = df_opportunities[df_opportunities["offers_work"]]
-    
-    df_work_different_zone =  pd.merge(df_work_zones, df_households,on=["person_id"], how='left')
-    df_work_different_zone = df_work_different_zone[df_work_different_zone["zone_id_x"]!=df_work_different_zone["zone_id_y"]]
+    df_work_different_zone = df_work_zones
+
+    df_work_different_zone = df_work_different_zone[df_work_different_zone["work_id"]!=df_work_different_zone["home_id"]]
     df_work_different_zone.rename(columns={"zone_id_x" : "zone_id"},inplace=True)
+
+    df_work_locations = df_opportunities[df_opportunities["offers_work"]]
 
     df_work = impute_locations(df_work_different_zone, df_commune_zones, df_work_locations, 24)[["person_id", "x", "y", "location_id"]]
     
-    df_work_same_zone = pd.merge(df_work_zones, df_households,on=["person_id"], how='left')
-    df_work_same_zone = df_work_same_zone[df_work_same_zone["zone_id_x"]==df_work_same_zone["zone_id_y"]]
-    f_persons = (df_work_same_zone["zone_id_x"] == df_work_same_zone["zone_id_y"])
+    df_work_same_zone = df_work_zones
+    df_work_same_zone = df_work_same_zone[df_work_same_zone["work_id"]==df_work_same_zone["home_id"]]
+    f_persons = (df_work_same_zone["work_id"] == df_work_same_zone["home_id"])
         
     df_candidates = df_work_locations
     work_coordinates = list(zip(df_candidates["x"], df_candidates["y"]))
@@ -369,9 +383,6 @@ def execute(context):
     df_work_same_zone = work_locations[["person_id", "x", "y", "location_id"]]
     
     
-    df_work = df_work.append(df_work_same_zone, sort = False)
-    
-    
-    ###########################################################################
+    df_work = df_work.append(df_work_same_zone, sort = False)        
     
     return df_home, df_work, df_education

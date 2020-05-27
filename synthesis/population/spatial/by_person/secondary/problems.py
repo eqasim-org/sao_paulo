@@ -27,9 +27,11 @@ def find_bare_assignment_problems(df):
         problem["travel_times"].append(travel_time)
 
         if problem["purposes"][-1] in FIXED_PURPOSES:
-            # The current chain (or initial tail) ends with a fixed activity.
+            # The current chain (or initial tail) ends with a fixed
             yield problem
             problem = None
+
+ 
 
 LOCATION_FIELDS = ["person_id", "home", "work", "education"]
 
@@ -41,11 +43,12 @@ def find_assignment_problems(df, df_locations):
           - Reduces purposes to the variable ones
     """
     location_iterator = df_locations[LOCATION_FIELDS].itertuples(index = False)
-    current_location = None
+    current_location = None    
 
     for problem in find_bare_assignment_problems(df):
         origin_purpose = problem["purposes"][0]
         destination_purpose = problem["purposes"][-1]
+        pi = problem["purposes"]
 
         # Reduce purposes
         if origin_purpose in FIXED_PURPOSES and destination_purpose in FIXED_PURPOSES:
@@ -83,3 +86,6 @@ def find_assignment_problems(df, df_locations):
             problem["destination"] = np.array([[problem["destination"].x, problem["destination"].y]])
 
         yield problem
+
+
+

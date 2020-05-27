@@ -25,6 +25,7 @@ def execute(context):
                 "H_CHEG","MIN_CHEG",
                 "DURACAO","QT_AUTO","QT_BICICLE","QT_MOTO","N_VIAG",
                 "RENDA_FA", "PAG_VIAG", "TP_ESAUTO", "VL_EST","TIPVG", "CO_DOM_X", "CO_DOM_Y", "ESTUDA"]]	
+
     # rename columns
     df_reduced.columns = ["person_id","zone","age","gender",
                      "weight_person","weight_trip",
@@ -96,7 +97,6 @@ def execute(context):
     df_persons["number_of_cars"] = df_persons["number_of_cars"].astype(np.int)
 
     # ID and weight
-    #df_persons.loc[:, "person_id"] = df_persons["observation"]
     df_persons.loc[:, "weight"] = df_persons["weight_person"]
 
     # Attributes
@@ -147,9 +147,15 @@ def execute(context):
     df_trips.loc[df_trips["destination_purpose"] == "shopping", "destination_purpose"] = "shop"
     df_trips.loc[df_trips["destination_purpose"] == "errand", "destination_purpose"] = "other"
 
+    df_trips.loc[df_trips["origin_purpose"] == "shopping", "origin_purpose"] = "shop"
+    df_trips.loc[df_trips["origin_purpose"] == "errand", "origin_purpose"] = "other"
+
     df_trips.loc[df_trips["destination_purpose"].isna(), "destination_purpose"] = "other"
+    df_trips.loc[df_trips["origin_purpose"].isna(), "origin_purpose"] = "other"
+
     df_trips["following_purpose"] = df_trips["destination_purpose"].astype("category")
     df_trips["preceeding_purpose"] = df_trips["origin_purpose"].astype("category")
+
     df_trips.loc[df_trips["mode"] == "motorcycle", "mode"] = "car"
     df_trips.loc[df_trips["mode"] == "taxi", "mode"] = "taxi"
     df_trips.loc[df_trips["mode"] == "ride_hailing", "mode"] = "taxi"
@@ -166,11 +172,38 @@ def execute(context):
     hhtrips_index = df_trips.index.isin(hhtrips_index_list)
     df_trips = df_trips[~hhtrips_index]
 
+    # Remove trips from home to home
+    hhtrips_index_list = df_trips.index[np.logical_and(df_trips["origin_purpose"]=="work", df_trips["destination_purpose"]=="work")] 
+    hhtrips_index = df_trips.index.isin(hhtrips_index_list)
+    df_trips = df_trips[~hhtrips_index]
+
+    # Remove trips from home to home
+    hhtrips_index_list = df_trips.index[np.logical_and(df_trips["origin_purpose"]=="education", df_trips["destination_purpose"]=="education")] 
+    hhtrips_index = df_trips.index.isin(hhtrips_index_list)
+    df_trips = df_trips[~hhtrips_index]
+
+    # Adjust trip id
+    df_trips = df_trips.sort_values(by = ["person_id", "trip_id"])
+    trips_per_person = df_trips.groupby("person_id").size().reset_index(name = "count")["count"].values
+    df_trips["trip_id"] = np.hstack([np.arange(n) for n in trips_per_person])
+
     # Remove trips that are the first done by an agent not starting from home
-    first_index_list = df_trips.index[np.logical_and(df_trips["trip_id"]==1, df_trips["origin_purpose"]!="home")] 
+    first_index_list = df_trips.index[np.logical_and(df_trips["trip_id"]==0, df_trips["origin_purpose"]!="home")] 
     first_index = df_trips.index.isin(first_index_list)
     to_remove1 = df_trips[first_index]
     df_trips = df_trips[~first_index]
+
+    # Remove agents concerned 
+    agents_to_be_removed = to_remove1["person_id"].values.tolist()
+    agents_list = [(df_persons["person_id"].iloc[i] not in agents_to_be_removed) for i in range(len(df_persons))]
+    agents_index_list = df_persons.index[agents_list]
+    agents_index = df_persons.index.isin(agents_index_list)
+    removed_agents_id = df_persons[~agents_index].values.tolist()
+    df_persons = df_persons[agents_index]
+
+    # Adjust trips
+    has_to_be_removed = [df_trips["person_id"].iloc[i] in removed_agents_id   for i in range(len(df_trips)) ]
+    df_trips = df_trips[np.logical_not(has_to_be_removed)]
 
     # Remove trips that are the last done by an agent not returning to home
     number_of_trips_per_agent = df_trips.groupby(["person_id"], sort=False)["trip_id"].max()
@@ -180,12 +213,62 @@ def execute(context):
     to_remove2 = df_trips[last_index]
     df_trips = df_trips[~last_index]
 
-    # Remove agents concerned by one of the two previous cases
-    agents_to_be_removed = pd.concat([to_remove1, to_remove2]).drop_duplicates()["person_id"].values.tolist()
+    # Remove agents concerned
+    agents_to_be_removed = to_remove2["person_id"].values.tolist()
     agents_list = [(df_persons["person_id"].iloc[i] not in agents_to_be_removed) for i in range(len(df_persons))]
     agents_index_list = df_persons.index[agents_list]
     agents_index = df_persons.index.isin(agents_index_list)
+    removed_agents_id = df_persons[~agents_index].values.tolist()
     df_persons = df_persons[agents_index]
+
+    # Adjust trips
+    has_to_be_removed = [df_trips["person_id"].iloc[i] in removed_agents_id   for i in range(len(df_trips)) ]
+    df_trips = df_trips[np.logical_not(has_to_be_removed)]
+
+    # Fix inconsistencies
+    pers_id = list(set(df_trips["person_id"].values.tolist() ))
+    to_remove = []
+    for pid in tqdm(pers_id, desc = "Cleaning HTS trips"):
+        df_i = df_trips[df_trips["person_id"] == pid]
+        df_i.sort_values(by=["trip_id"])
+        purposes = []
+        for row in df_i[["person_id", "preceeding_purpose", "following_purpose"]].itertuples(index = False):
+            persid, pp, fp = row
+            purposes.append(pp)
+            purposes.append(fp)
+
+        if len(purposes) == 2:
+            # Only one trip
+            to_remove.append(pid)
+
+        elif purposes[0] != 'home' or purposes[-1] != 'home':
+            # Don't start and end at home
+            to_remove.append(pid)
+
+        else:
+            purposes = purposes[1:-1]
+            i=0
+            while i < len(purposes):
+                p1 = purposes[i]
+                p2 = purposes[i+1]
+                if p1 != p2:
+                    # The agent moved from one activity to another one without reporting the trip
+                    to_remove.append(pid)
+                    break
+                i += 2 
+
+    pid = list(set(to_remove))
+
+    agents_list = [(df_persons["person_id"].iloc[i] not in pid) for i in range(len(df_persons))]
+    agents_index_list = df_persons.index[agents_list]
+    agents_index = df_persons.index.isin(agents_index_list)
+    removed_agents_id = df_persons[~agents_index].values.tolist()
+    df_persons = df_persons[agents_index]
+
+    # Adjust trips
+    has_to_be_removed = [df_trips["person_id"].iloc[i] in removed_agents_id   for i in range(len(df_trips)) ]
+    df_trips = df_trips[np.logical_not(has_to_be_removed)]
+             
 
     # Crowfly distance
     df_trips["crowfly_distance"] = np.sqrt(
@@ -220,13 +303,6 @@ def execute(context):
         "person_id", "trip_id", "new_trip_id", "preceeding_purpose", "following_purpose", "mode",
         "departure_time", "arrival_time", "crowfly_distance", "activity_duration", "origin_x", "origin_y", "destination_x", "destination_y", "origin_zone", "destination_zone"
     ]]
-
-    sameX = df_trips.index[df_trips["origin_x"] == df_trips["destination_x"]].tolist()
-    sameX = df_trips.index.isin(sameX)
-    sameY = df_trips.index[df_trips["origin_y"] == df_trips["destination_y"]].tolist() 
-    sameY = df_trips.index.isin(sameX)
-    same_loc = np.logical_and(sameX, sameY)
-    df_trips[~same_loc]
 
 
     #### From here everything as Paris
@@ -272,7 +348,5 @@ def execute(context):
     df_persons["is_passenger"] = df_persons["is_passenger"].fillna(False)
     df_persons["is_passenger"] = df_persons["is_passenger"].astype(np.bool)
 
-    #adapt employed variable
-    #there are young persons that go to education, but are not classified as students
-    #df_persons.loc[(df_persons["has_education_trip"]) & (df_persons["age"]<16), "employment"] = "student"
+
     return df_persons, df_trips
