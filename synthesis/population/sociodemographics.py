@@ -24,7 +24,8 @@ def execute(context):
 
     df_hts = df_hts[[
         "hts_person_id", "has_pt_subscription",
-        "is_passenger", "commute_mode", "commute_distance",
+        "is_passenger", "commute_mode_work", "commute_distance_work",
+        "commute_mode_education", "commute_distance_education",
         "has_work_trip", "has_education_trip"
     ]]
 

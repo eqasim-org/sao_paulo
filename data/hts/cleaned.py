@@ -139,7 +139,7 @@ def execute(context):
     # Clean up
     df_persons = df_persons[[
         "person_id", "weight",
-        "age", "sex", "employment", "binary_car_availability", "has_pt_subscription", "home_zone", "household_income", "residence_area_index"
+        "age", "sex", "employment", "binary_car_availability", "has_pt_subscription", "home_zone", "household_income", "residence_area_index", "homeCoordX", "homeCoordY"
     ]]
 
     # Trips
@@ -297,13 +297,15 @@ def execute(context):
 
     df_duration = df_duration[["person_id", "trip_id", "activity_duration"]]
     df_trips = pd.merge(df_trips, df_duration, how = "left", on = ["person_id", "trip_id"])
-
+    df_trips = pd.merge(df_trips, df_persons[["person_id", "age"]], on="person_id", how='left')
+    #those younger than 16 work -> other
+    df_trips.loc[(df_trips["following_purpose"]=='work') & (df_trips["age"] < 16), "following_purpose"]="other"
+    df_trips.loc[(df_trips["preceeding_purpose"]=='work') & (df_trips["age"] < 16), "preceeding_purpose"]="other"
     # Clean up
     df_trips = df_trips[[
         "person_id", "trip_id", "new_trip_id", "preceeding_purpose", "following_purpose", "mode",
-        "departure_time", "arrival_time", "crowfly_distance", "activity_duration", "origin_x", "origin_y", "destination_x", "destination_y", "origin_zone", "destination_zone"
+        "departure_time", "arrival_time", "crowfly_distance", "activity_duration", "origin_x", "origin_y", "destination_x", "destination_y", "origin_zone", "destination_zone", "homeCoordX", "homeCoordY"
     ]]
-
 
     #### From here everything as Paris
 
@@ -325,17 +327,31 @@ def execute(context):
     df_persons["has_work_trip"] = df_persons["has_work_trip"].fillna(False)
 
     # Find commute information
-    df_commute = df_trips[df_trips["following_purpose"].isin(["work", "education"])]
-    df_commute = df_commute.sort_values(by = ["person_id", "crowfly_distance"])
-    df_commute = df_commute.drop_duplicates("person_id", keep = "last")
+    df_commute_work = df_trips[df_trips["following_purpose"].isin(["work"])]
+    df_commute_work["commute_distance_work"] = np.sqrt(
+        (df_commute_work["homeCoordX"] - df_commute_work["destination_x"])**2 + (df_commute_work["homeCoordY"] - df_commute_work["destination_y"])**2
+    )
+    df_commute_work = df_commute_work.drop_duplicates("person_id", keep = "first")
 
-    df_commute = df_commute[["person_id", "crowfly_distance", "mode"]]
-    df_commute.columns = ["person_id", "commute_distance", "commute_mode"]
+    df_commute_work = df_commute_work[["person_id", "commute_distance_work", "mode"]]
+    df_commute_work.columns = ["person_id", "commute_distance_work", "commute_mode_work"]
 
-    df_persons = pd.merge(df_persons, df_commute, on = "person_id", how = "left")
+    df_persons = pd.merge(df_persons, df_commute_work, on = "person_id", how = "left")
 
-    assert(not df_persons[df_persons["has_work_trip"]]["commute_distance"].isna().any())
-    assert(not df_persons[df_persons["has_education_trip"]]["commute_distance"].isna().any())
+    assert(not df_persons[df_persons["has_work_trip"]]["commute_distance_work"].isna().any())
+    
+    df_commute_education = df_trips[df_trips["following_purpose"].isin(["education"])]
+    df_commute_education["commute_distance_education"] = np.sqrt(
+        (df_commute_education["homeCoordX"] - df_commute_education["destination_x"])**2 + (df_commute_education["homeCoordY"] - df_commute_education["destination_y"])**2
+    )
+    df_commute_education = df_commute_education.drop_duplicates("person_id", keep = "first")
+
+    df_commute_education = df_commute_education[["person_id", "commute_distance_education", "mode"]]
+    df_commute_education.columns = ["person_id", "commute_distance_education", "commute_mode_education"]
+
+    df_persons = pd.merge(df_persons, df_commute_education, on = "person_id", how = "left")
+    
+    assert(not df_persons[df_persons["has_education_trip"]]["commute_distance_education"].isna().any())
 
     # Passengers
 
