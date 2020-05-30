@@ -12,7 +12,7 @@ def configure(context):
 
 def execute(context):
     
-    df_zones = context.stage("data.spatial.zones")[0]
+    df_zones = context.stage("data.spatial.zones")
     df_persons = context.stage("data.hts.cleaned")[0]
     df_trips = context.stage("data.hts.cleaned")[1].copy()
     zone_ids = set(np.unique(df_zones["zone_id"]))
