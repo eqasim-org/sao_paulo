@@ -27,7 +27,7 @@ Brasil is available at the website of Centro de Estudos da Metrópole:
 you can use the service
 - Select the data under censo demographico 2010
 - Download Bancos de microdados da amostra do Censo Demográfico 2010
-- Copy the contents of the *zip* file into the folder `data/census`
+- Copy the contents of the *zip* file into the folder `data/Census`
 
 ### 2) Sao Paulo household travel survey (OD 2017)
 
@@ -44,7 +44,7 @@ The OpenStreetMap data is avaialble from Geofabrik:
 - [Sao-Paulo OSM](http://download.geofabrik.de/south-america/brazil/sudeste.html)
 - Here you would need to cut-out the Sao Paulo Metropolitan region. 
 This can be easily done using a tool called *osmosis*. You would need a polygon 
-file describing the boundaries of the region, which you can find also [here](). 
+file describing the boundaries of the region, which you can find also [here](../resources). 
 - Cut-out Sao Paulo region and place sao-paulo.osm.pbf file in `data/osm`
 
 ### 4) Educational facilities
@@ -66,6 +66,10 @@ you can use the service
 - Select the data under censo demographico 2010
 - Download Shapefile dos Setores Censitários 2010 RM São Paulo SC2010 CEM
 - Copy the contents of the *zip* file into the folder `data/spatial`
+- Additionally there are two more files based on the shapefile above that were created for now manually (
+SC2010_RMSP_CEM_V3_city and SC2010_RMSP_CEM_V3_center). These represent the city of Sao Paulo and downtown 
+Sao Paulo.
+You can find them under resources folder. Please copy these files to `data/spatial`.
 
 ### 9) *(Optional)* Road network (OpenStreetMap)
 
@@ -73,7 +77,7 @@ Only in case you want to run a full simulation of the scenario (rather than
 creating the synthetic population in itself), you need to use the sao-paulo osm data again:
 
 - The file you have created in step 3 unpack to .osm (you cna do that using osmosis tool)
-- In order to save storage space, you should pack it to sao-paulo.osm.gz
+- In order to save storage space, you should pack it to sao_paulo.osm.gz
 - Put the *gz* file into the folder `data/osm`.
 
 ### 10) *(Optional)* Public transit schedule (GTFS)
@@ -95,29 +99,30 @@ in calendar.txt in order to overlap with sptrans calendar.txt dates
 
 Your folder structure should now have at least the following files:
 
-- `data/rp_2015/FD_INDCVIZA_2015.dbf`
-- `data/rp_2015/FD_MOBPRO_2015.dbf`
-- `data/rp_2015/FD_MOBSCO_2015.dbf`
-- `data/rp_2015/base-ic-evol-struct-pop-2015.xls`
-- `data/filosofi_2015/FILO_DISP_COM.xls`
-- `data/filosofi_2015/FILO_DISP_REG.xls`
-- `data/bpe_2018/bpe18_ensemble_xy.dbf`
-- `data/entd_2008/Q_individu.csv`
-- `data/entd_2008/Q_tcm_individu.csv`
-- `data/entd_2008/Q_menage.csv`
-- `data/entd_2008/Q_tcm_menage.csv`
-- `data/entd_2008/K_deploc.csv`
-- `data/entd_2008/Q_ind_lieu_teg.csv`
-- `data/iris_2017/CONTOURS-IRIS.cpg`
-- `data/iris_2017/CONTOURS-IRIS.dbf`
-- `data/iris_2017/CONTOURS-IRIS.prj`
-- `data/iris_2017/CONTOURS-IRIS.shp`
-- `data/iris_2017/CONTOURS-IRIS.shx`
-- `data/codes_2017/reference_IRIS_geo2017.xls`
+- `data/Census/Censo.2010.brasil.amostra.10porcento.sav`
+- `data/HTS/OD_2017.dbf`
+- `data/osm/sao_paulo.osm.pbf`
+- `data/escolas_enderecos.csv`
+- `data/Spatial/SC2010_RMSP_CEM_V3.cpg`
+- `data/Spatial/SC2010_RMSP_CEM_V3.shp`
+- `data/Spatial/SC2010_RMSP_CEM_V3.dbf`
+- `data/Spatial/SC2010_RMSP_CEM_V3.prj`
+- `data/Spatial/SC2010_RMSP_CEM_V3.shx`
+- `data/Spatial/SC2010_RMSP_CEM_V3_center.cpg`
+- `data/Spatial/SC2010_RMSP_CEM_V3_center.shp`
+- `data/Spatial/SC2010_RMSP_CEM_V3_center.dbf`
+- `data/Spatial/SC2010_RMSP_CEM_V3_center.prj`
+- `data/Spatial/SC2010_RMSP_CEM_V3_center.shx`
+- `data/Spatial/SC2010_RMSP_CEM_V3_city.cpg`
+- `data/Spatial/SC2010_RMSP_CEM_V3_city.shp`
+- `data/Spatial/SC2010_RMSP_CEM_V3_city.dbf`
+- `data/Spatial/SC2010_RMSP_CEM_V3_city.prj`
+- `data/Spatial/SC2010_RMSP_CEM_V3_city.shx`
+
 
 If you want to run the simulation, there should be also the following files:
 
-- `data/osm/sao-paulo.osm.gz`
+- `data/osm/sao_paulo.osm.gz`
 - `data/gtfs/emtu.zip`
 - `data/gtfs/sptrans.zip`
 
