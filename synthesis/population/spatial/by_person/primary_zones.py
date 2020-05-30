@@ -9,17 +9,8 @@ import time
 
 def configure(context):
     context.stage("data.od.cleaned")
-    context.stage("data.spatial.zones")
     context.stage("synthesis.population.sociodemographics")
     context.stage("synthesis.population.trips")
-
-# TODO: There are some points for improvement:
-# - 2. We can add a second step where an IRIS is sampled for each person (given
-#      the commune). First this could be done by distance, or by number of enterprises
-#      in the IRIS. We can get this information from BPE.
-# - 3. Unfortunately we only have a work place density, not a density of employment. If
-#      we would find this somehwere, it would be even better!
-# - 4. We can parallelize this stage easily!
 
 def execute(context):
     df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age", "household_id"]], copy = True)

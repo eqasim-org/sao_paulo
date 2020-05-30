@@ -14,7 +14,7 @@ def execute(context):
     df_census["zone_id"] = df_census["zone_id"].astype(np.int)
 
     # Read the zonal system and remove those outside of the area
-    df_zones = context.stage("data.spatial.zones")[0]
+    df_zones = context.stage("data.spatial.zones")
     df_zones["zone_id"] = df_zones["zone_id"].astype(np.int)
 
     # Merge with zonal information
@@ -33,8 +33,8 @@ def execute(context):
     center = center["AP_2010_CH"].values.tolist()
     city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config("data_path"))
     city = city["AP_2010_CH"].values.tolist()
-    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config("data_path"))
-    county = county["AP_2010_CH"].values.tolist()
+    region = context.stage("data.spatial.zones")
+    region = region["AP_2010_CH"].values.tolist()
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in county and z not in city) for z in zone_id]

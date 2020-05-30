@@ -266,8 +266,8 @@ def impute_work_locations_same_zone(hts_trips, df_ag, df_candidates, df_travel, 
 
 def execute(context):
     threads = context.config("processes")
-    df_zones = context.stage("data.spatial.zones")[0][["zone_id", "geometry"]]
-    df_commune_zones = context.stage("data.spatial.zones")[0]
+    df_zones = context.stage("data.spatial.zones")[["zone_id", "geometry"]]
+    df_commune_zones = context.stage("data.spatial.zones")
     df_zones["zone_id"] = df_zones["zone_id"].astype(np.int)
     
     df_opportunities = context.stage("synthesis.destinations")

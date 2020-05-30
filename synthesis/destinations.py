@@ -12,7 +12,7 @@ def configure(context):
 
 
 def execute(context):   
-    df_zones = context.stage("data.spatial.zones")[0]
+    df_zones = context.stage("data.spatial.zones")
 	
     df_opportunities = context.stage("data.opportunities.extract_roads_osm") 
     df_opportunities = df_opportunities[["x", "y"]]

@@ -113,7 +113,7 @@ def execute(context):
     df_persons["binary_car_availability"] = df_persons["number_of_cars"] > 0
     df_persons["income"] = df_persons["personal_income"]
     
-    df_zones = context.stage("data.spatial.zones")[0][["zone_id", "geometry"]]
+    df_zones = context.stage("data.spatial.zones")[["zone_id", "geometry"]]
     df_persons["geometry"] = [geo.Point(*xy) for xy in zip(df_persons["homeCoordX"], df_persons["homeCoordY"])]
     df_geo = gpd.GeoDataFrame(df_persons, crs = {"init" : "epsg:29183"})
     # only take necessary rows into account to speed up process
@@ -124,15 +124,15 @@ def execute(context):
     zone_id = df_persons["home_zone"].values.tolist()
 
      # Import shapefiles defining the different zones
-    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_center.shp" % context.config("data_path"))
+    center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_center.shp" % context.config("data_path"))
     center = center["AP_2010_CH"].values.tolist()
-    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_city.shp" % context.config("data_path"))
+    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path"))
     city = city["AP_2010_CH"].values.tolist()
-    county = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_merged_all_state.shp" % context.config("data_path"))
-    county = county["AP_2010_CH"].values.tolist()
+    region = context.stage("data.spatial.zones")
+    region = region["AP_2010_CH"].values.tolist()
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
-    sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in county and z not in city) for z in zone_id]
+    sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in region and z not in city) for z in zone_id]
     df_persons["residence_area_index"] = sp_area
 
 
