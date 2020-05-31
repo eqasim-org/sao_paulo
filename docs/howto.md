@@ -44,9 +44,14 @@ The OpenStreetMap data is avaialble from Geofabrik:
 - Here you cna find [Sao-Paulo OSM](http://download.geofabrik.de/south-america/brazil/sudeste.html) data
 - Download the sudeste-latest.osm.pbf file
 - Now you need to cut-out the Sao Paulo Metropolitan region. 
-This can be easily done using a tool called *osmosis*. You would need a polygon 
-file describing the boundaries of the region, which you can find also [here](../resources) called sao-paulo.poly. 
-- Cut-out Sao Paulo region and place sao-paulo.osm.pbf file in `data/osm`
+This can be easily done using a tool called [osmosis](https://github.com/openstreetmap/osmosis). Download the latest build and follow
+the installation instructions. You would need a polygon 
+file describing the boundaries of the region, which you can find also [here](../resources) called sao_paulo.poly. 
+- The following command using osmosis can be used to cut-out a Sao Paulo region:
+```
+osmosis --read-pbf file="sudeste-latest.osm.pbf" --bounding-polygon file="sao_paulo.poly" --write-pbf file="sao_paulo.osm.pbf"
+```
+- Cut-out Sao Paulo region and place sao_paulo.osm.pbf file in `data/osm`
 
 ### 4) Educational facilities
 
@@ -77,7 +82,10 @@ You can find them under resources folder. Please copy these files to `data/spati
 Only in case you want to run a full simulation of the scenario (rather than
 creating the synthetic population in itself), you need to use the sao-paulo osm data again:
 
-- The file you have created in step 3 unpack to .osm (you cna do that using osmosis tool)
+- The file you have created in step 3 unpack to .osm (you can do that using osmosis tool):
+```
+osmosis --read-pbf file="sao_paulo.osm.pbf" --write-xml file="sao_paulo.osm"
+```
 - In order to save storage space, you should pack it to sao_paulo.osm.gz
 - Put the *gz* file into the folder `data/osm`.
 
