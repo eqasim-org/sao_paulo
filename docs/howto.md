@@ -41,10 +41,11 @@ The Sao Paulo household travel survey is available from Transportes Metropolitan
 
 The OpenStreetMap data is avaialble from Geofabrik:
 
-- [Sao-Paulo OSM](http://download.geofabrik.de/south-america/brazil/sudeste.html)
-- Here you would need to cut-out the Sao Paulo Metropolitan region. 
+- Here you cna find [Sao-Paulo OSM](http://download.geofabrik.de/south-america/brazil/sudeste.html) data
+- Download the sudeste-latest.osm.pbf file
+- Now you need to cut-out the Sao Paulo Metropolitan region. 
 This can be easily done using a tool called *osmosis*. You would need a polygon 
-file describing the boundaries of the region, which you can find also [here](../resources). 
+file describing the boundaries of the region, which you can find also [here](../resources) called sao-paulo.poly. 
 - Cut-out Sao Paulo region and place sao-paulo.osm.pbf file in `data/osm`
 
 ### 4) Educational facilities
