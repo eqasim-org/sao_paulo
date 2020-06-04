@@ -38,4 +38,7 @@ def execute(context):
     df_persons.loc[df_persons["age"] < 18, "has_pt_subscription"] = True
     df_persons.loc[df_persons["age"] >= 60, "has_pt_subscription"] = True
 
+    df_persons.loc[np.logical_and(df_persons["age"] >= 18, df_persons["binary_car_availability"]), "has_license"] = True
+    df_persons.loc[np.logical_or(df_persons["age"] < 18, np.logical_not(df_persons["binary_car_availability"])), "has_license"] = False
+
     return df_persons
