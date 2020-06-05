@@ -18,7 +18,7 @@ PERSON_FIELDS = [
     "census_person_id", "household_id",
     "has_license", "has_pt_subscription", "is_passenger",
     "hts_person_id", 
-    "age", "employment", "sex"
+    "age", "employment", "sex", "residence_area_index"
 ]
 
 ACTIVITY_FIELDS = [
@@ -39,6 +39,8 @@ def add_person(writer, person, activities, trips):
     writer.add_attribute("carAvailability", "java.lang.String", person[PERSON_FIELDS.index("binary_car_availability")])
 
     writer.add_attribute("censusPersonId", "java.lang.Long", person[PERSON_FIELDS.index("census_person_id")])
+
+    writer.add_attribute("residenceAreaId", "java.lang.Long", person[PERSON_FIELDS.index("residence_area_index")])
 
     writer.add_attribute("htsPersonId", "java.lang.Long", person[PERSON_FIELDS.index("hts_person_id")])
 
