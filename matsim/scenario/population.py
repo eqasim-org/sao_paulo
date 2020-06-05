@@ -98,7 +98,6 @@ def execute(context):
     df_activities = context.stage("synthesis.population.activities").sort_values(by = ["person_id", "activity_id"])
     df_locations = context.stage("synthesis.population.spatial.locations")[[
         "person_id", "activity_id", "geometry", "destination_id"]].sort_values(by = ["person_id", "activity_id"])
-
     df_activities = pd.merge(df_activities, df_locations, how = "left", on = ["person_id", "activity_id"])
     df_activities["destination_id"] = df_activities["destination_id"].fillna(-1).astype(int)
 

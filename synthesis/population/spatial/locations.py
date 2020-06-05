@@ -29,12 +29,14 @@ def execute(context):
     df_work_locations = df_locations[df_locations["purpose"] == "work"]
     df_work_locations = pd.merge(df_work_locations, df_work[["person_id", "location_id", "x", "y"]], on = "person_id")
     df_work_locations = df_work_locations[["person_id", "activity_id", "location_id", "x", "y"]]
+    df_work_locations = df_work_locations.rename(columns={"location_id": "destination_id"})
     df_work_locations["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_work_locations["x"], df_work_locations["y"]))]
 
     # Education locations
     df_education_locations = df_locations[df_locations["purpose"] == "education"]
     df_education_locations = pd.merge(df_education_locations, df_education[["person_id", "location_id", "x", "y"]], on = "person_id")
     df_education_locations = df_education_locations[["person_id", "activity_id", "location_id", "x", "y"]]
+    df_education_locations = df_education_locations.rename(columns={"location_id": "destination_id"})
     df_education_locations["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_education_locations["x"], df_education_locations["y"]))]
 
     # Secondary locations

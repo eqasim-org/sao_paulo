@@ -33,7 +33,7 @@ def execute(context):
 
         content = content.replace(
             '<param name="allowedTransportModes" value="car" />',
-            '<param name="allowedTransportModes" value="car,car_passenger" />'
+            '<param name="allowedTransportModes" value="car,car_passenger,taxi" />'
         )
 
         with open("%s/config.xml" % context.path(), "w+") as f_write:

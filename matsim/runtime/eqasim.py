@@ -18,7 +18,7 @@ def run(context, command, arguments):
     # Make sure there is a dependency
     context.stage("matsim.runtime.eqasim")
 
-    jar_path = "%s/eqasim-java/ile_de_france/target/ile_de_france-%s.jar" % (
+    jar_path = "%s/eqasim-java/sao_paulo/target/sao_paulo-%s.jar" % (
         context.path("matsim.runtime.eqasim"), version
     )
     java.run(context, command, arguments, jar_path)
@@ -29,13 +29,13 @@ def execute(context):
     # Clone repository and checkout version
     git.run(context, [
         "clone", "https://github.com/eqasim-org/eqasim-java.git",
-        "--branch", "v%s" % version,
+        "--branch", "develop",
         "--single-branch", "eqasim-java",
         "--depth", "1"
     ])
 
     # Build eqasim
     maven.run(context, ["-Pstandalone", "package"], cwd = "%s/eqasim-java" % context.path())
-    jar_path = "%s/eqasim-java/ile_de_france/target/ile_de_france-%s.jar" % (context.path(), version)
+    jar_path = "%s/eqasim-java/sao_paulo/target/sao_paulo-%s.jar" % (context.path(), version)
 
-    return "eqasim-java/ile_de_france/target/ile_de_france-%s.jar" % version
+    return "eqasim-java/sao_paulo/target/sao_paulo-%s.jar" % version

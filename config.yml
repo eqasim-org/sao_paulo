@@ -11,9 +11,15 @@ run:
   #- synthesis.population.trips
   #- synthesis.population.spatial.by_person.primary_zones
   #- synthesis.population.spatial.by_person.primary_locations
-  - synthesis.population.spatial.by_person.secondary.locations
-  - synthesis.output # To create the output population in the output_path (see below)
-  #- matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
+  #- synthesis.population.spatial.by_person.secondary.locations
+  #- synthesis.output # To create the output population in the output_path (see below)
+  #- synthesis.population.spatial.locations
+  #- synthesis.population.activities
+  #- matsim.scenario.population
+  #- matsim.scenario.supply.processed
+  #- matsim.scenario.supply.osm
+  #- matsim.runtime.eqasim
+  - matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
 
 # Here the configuraiton of the pipeline starts
 config:
@@ -29,4 +35,4 @@ config:
   output_path: /nas/balacm/SaoPauloSynPP/output
 
   # Only interesting if you run the simulation
-  java_memory: 30G
+  java_memory: 80G

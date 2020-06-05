@@ -23,11 +23,11 @@ def run(context, arguments = [], cwd = None):
         raise RuntimeError("Git return code: %d" % return_code)
 
 def validate(context):
-    if not b"2." in sp.check_output([
+    if not b"1." in sp.check_output([
         context.config("git_binary"),
         "--version"
     ], stderr = sp.STDOUT):
-        raise RuntimeError("Git 2.x.x is required for this pipeline.")
+        raise RuntimeError("Git 1.x.x is required for this pipeline.")
 
 def execute(context):
     pass

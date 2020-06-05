@@ -26,7 +26,7 @@ def execute(context):
 
     df_homes = context.stage("synthesis.population.spatial.by_person.primary_locations")[0]
     df_homes["geometry"] = [geo.Point(px, py) for px, py in list(zip(df_homes["x"].values.tolist(), df_homes["y"].values.tolist() )) ]
-    df_homes = df_homes[HOME_FIELDS]
+    df_homes = df_homes[HOME_FIELDS].drop_duplicates(subset='household_id',keep='first')
 
     with gzip.open(output_path, 'wb+') as writer:
         with io.BufferedWriter(writer, buffer_size = 2 * 1024**3) as writer:
