@@ -42,6 +42,7 @@ def execute(context):
     df_persons = df_persons[[
         "person_id", "household_id",
         "age", "employment", "sex", "has_pt_subscription",
+	"has_license",
         "census_person_id", "hts_person_id"
     ]]
 

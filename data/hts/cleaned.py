@@ -129,7 +129,7 @@ def execute(context):
     city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path"))
     city = city["AP_2010_CH"].values.tolist()
     region = context.stage("data.spatial.zones")
-    region = region["AP_2010_CH"].values.tolist()
+    region = region["zone_id"].values.tolist()
 
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in region and z not in city) for z in zone_id]
