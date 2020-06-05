@@ -20,13 +20,13 @@ describe this process.
 ### 1) Census data (Censo 2010)
 
 Census data containing the socio-demographic information of people living in
-Brasil is available at the website of Centro de Estudos da Metrópole:
+Brasil is available at the website of Centro de Estudos da MetrÃ³pole:
 
 - [Census data](http://centrodametropole.fflch.usp.br/pt-br/controle-acesso)
 - You need to register with your email, name and institution email before
 you can use the service
 - Select the data under censo demographico 2010
-- Download Bancos de microdados da amostra do Censo Demográfico 2010
+- Download Bancos de microdados da amostra do Censo DemogrÃ¡fico 2010
 - Copy the contents of the *zip* file into the folder `data/Census`
 
 ### 2) Sao Paulo household travel survey (OD 2017)
@@ -55,22 +55,22 @@ osmosis --read-pbf file="sudeste-latest.osm.pbf" --bounding-polygon file="sao_pa
 
 ### 4) Educational facilities
 
-The private and public school of Sao Paulo region are available from Dados Abertos da Educação:
+The private and public school of Sao Paulo region are available from Dados Abertos da EducaÃ§Ã£o:
 - [Educational facilities in Sao Paulo region](https://dados.educacao.sp.gov.br/dataset/endere%C3%A7os-de-escolas)
-- Download Endereços de Escolas (set/2018) - Secretaria da Educação de São Paulo csv data
+- Download EndereÃ§os de Escolas (set/2018) - Secretaria da EducaÃ§Ã£o de SÃ£o Paulo csv data
 - Please note that this file has one error in line 25881, there is one comma too many. Please replace in this line 
 "5,00E+91" with "500E+91" and save it. 
 - Put the downlaod *csv* file in `data/escolas_enderecos.csv`.
 
 ### 5) Census zoning system
 
-The Census zoning system is available from Centro de Estudos da Metrópole:
+The Census zoning system is available from Centro de Estudos da MetrÃ³pole:
 
 - [Zoning data](http://centrodametropole.fflch.usp.br/pt-br/controle-acesso)
 - You need to register with your email, name and institution email before
 you can use the service
 - Select the data under censo demographico 2010
-- Download Shapefile dos Setores Censitários 2010 RM São Paulo SC2010 CEM
+- Download Shapefile dos Setores CensitÃ¡rios 2010 RM SÃ£o Paulo SC2010 CEM
 - Copy the contents of the *zip* file into the folder `data/spatial`
 - Additionally there are two more files based on the shapefile above that were created for now manually (
 SC2010_RMSP_CEM_V3_city and SC2010_RMSP_CEM_V3_center). These represent the city of Sao Paulo and downtown 
@@ -144,7 +144,7 @@ To use the code, you have to clone the repository with `git`:
 git clone https://github.com/eqasim-org/sao_paulo
 ```
 
-which will create the `ile-de-france` folder containing the pipeline code. To
+which will create the `sao_paulo` folder containing the pipeline code. To
 set up all dependencies, especially the [synpp](https://github.com/eqasim-org/synpp) package,
 which is the code of the pipeline code, we recommend setting up a Python
 environment using [Anaconda](https://www.anaconda.com/):
