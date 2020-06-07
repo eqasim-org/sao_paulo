@@ -1,0 +1,38 @@
+## Synthetic population pipeline for Sao-Paulo
+## based on the synpp package
+
+# This is the path to a directory where the pipeline can store temporary data
+working_directory: /nas/balacm/SaoPauloSynPP/cache
+
+# This section defines which parts of the pipeline should be run
+run:
+  #- data.census.raw
+  #- data.hts.cleaned
+  #- synthesis.population.trips
+  #- synthesis.population.spatial.by_person.primary_zones
+  #- synthesis.population.spatial.by_person.primary_locations
+  #- synthesis.population.spatial.by_person.secondary.locations
+  #- synthesis.output # To create the output population in the output_path (see below)
+  #- synthesis.population.spatial.locations
+  #- synthesis.population.activities
+  #- matsim.scenario.population
+  #- matsim.scenario.supply.processed
+  #- matsim.scenario.supply.osm
+  #- matsim.runtime.eqasim
+  - matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
+
+# Here the configuraiton of the pipeline starts
+config:
+  # Some general configuration
+  processes: 24
+
+  # Define sampling rate and random seed for the output population
+  sampling_rate: 0.01
+  random_seed: 1234
+
+  # Paths to the input data and where the output should be stored
+  data_path: /nas/balacm/Data_SP
+  output_path: /nas/balacm/SaoPauloSynPP/output
+
+  # Only interesting if you run the simulation
+  java_memory: 80G
