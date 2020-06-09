@@ -364,5 +364,6 @@ def execute(context):
     df_persons["is_passenger"] = df_persons["is_passenger"].fillna(False)
     df_persons["is_passenger"] = df_persons["is_passenger"].astype(np.bool)
 
-
+    df_persons.to_csv("%s/HTS/personsHTS.csv" % context.config("data_path") )
+    df_trips.to_csv("%s/HTS/tripsHTS.csv" % context.config("data_path") )
     return df_persons, df_trips
