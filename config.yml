@@ -2,7 +2,7 @@
 ## based on the synpp package
 
 # This is the path to a directory where the pipeline can store temporary data
-working_directory: /nas/balacm/SaoPauloSynPP/cache
+working_directory: /home/asallard/Scenarios/Sao_Paulo/cache
 
 # This section defines which parts of the pipeline should be run
 run:
@@ -19,7 +19,8 @@ run:
   #- matsim.scenario.supply.processed
   #- matsim.scenario.supply.osm
   #- matsim.runtime.eqasim
-  - matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
+  #- matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
+  - analysis.analysis
 
 # Here the configuraiton of the pipeline starts
 config:
@@ -31,8 +32,11 @@ config:
   random_seed: 1234
 
   # Paths to the input data and where the output should be stored
-  data_path: /nas/balacm/Data_SP
-  output_path: /nas/balacm/SaoPauloSynPP/output
+  data_path: /home/asallard/Scenarios/Sao_Paulo/Data_SP
+  output_path: /home/asallard/Scenarios/Sao_Paulo/output
 
   # Only interesting if you run the simulation
   java_memory: 80G
+
+  # Only interesting if the analysis script is run
+  analysis_path: /home/asallard/Scenarios/Sao_Paulo/Analysis
