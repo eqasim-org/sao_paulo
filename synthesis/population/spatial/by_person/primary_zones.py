@@ -13,7 +13,7 @@ def configure(context):
     context.stage("synthesis.population.trips")
 
 def execute(context):
-    df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age", "household_id"]], copy = True)
+    df_persons = pd.DataFrame(context.stage("synthesis.population.sociodemographics")[["person_id", "zone_id", "census_person_id", "has_work_trip", "has_education_trip", "age", "household_id", "residence_area_index"]], copy = True)
     df_persons = df_persons
 
     df_trips = context.stage("synthesis.population.trips")[["person_id", "following_purpose"]]
@@ -43,14 +43,14 @@ def execute(context):
 
     for origin_id in tqdm(np.unique(df_persons["zone_id"]), desc = "Sampling education zones"):
         f = (df_persons["zone_id"] == origin_id) & df_persons["has_education_trip"]
-        df_origin = pd.DataFrame(df_persons[f][["person_id", "age"]], copy = True)
+        df_origin = pd.DataFrame(df_persons[f][["person_id", "age", "residence_area_index"]], copy = True)
         df_destination = df_education_od[df_education_od["origin_id"] == origin_id]
 
         if len(df_origin) > 0:
             counts = np.random.multinomial(len(df_origin), df_destination["weight"].values)
             indices = np.repeat(np.arange(len(df_destination)), counts)
             df_origin.loc[:, "zone_id"] = df_destination.iloc[indices]["destination_id"].values
-            df_education.append(df_origin[["person_id", "zone_id", "age"]])
+            df_education.append(df_origin[["person_id", "zone_id", "age", "residence_area_index"]])
            
     df_education = pd.concat(df_education)
 

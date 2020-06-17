@@ -30,17 +30,24 @@ def execute(context):
 
     # Import shapefiles defining the different zones
     center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_center.shp" % context.config("data_path"))
+    center["AP_2010_CH"] = center["AP_2010_CH"].astype(np.int)
     center = center["AP_2010_CH"].values.tolist()
-    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path"))
+
+    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path")) 
+    city["AP_2010_CH"] = city["AP_2010_CH"].astype(np.int)
     city = city["AP_2010_CH"].values.tolist()
+
     region = context.stage("data.spatial.zones")
     region = region["zone_id"].values.tolist()
 
+    print("Imputing residence area index")
     # New localization variable: 3 in the city center, 2 in the Sao-Paulo city and 1 otherwise
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in region and z not in city) for z in zone_id]
     df["residence_area_index"] = sp_area
+    print("Done")
 
     # Attributes renaming and some cleaning
+    print("Cleaning")
     df.loc[df["gender"] == 1, "sex"] = "male"
     df.loc[df["gender"] == 2, "sex"] = "female"
     df["sex"] = df["sex"].astype("category")
@@ -55,8 +62,10 @@ def execute(context):
     df["binary_car_availability"] = (df["carAvailability"] == 1) | (df["motorcycleAvailability"] == 1)
     df["household_income"] = df["householdIncome"]
     df["household_size"] = df["numberOfMembers"]
+    print("Done")
 
     # Create household ID
+    print("Create household id")
     i = 0
     hhl_number = 1
     hhl_id = []
@@ -69,6 +78,7 @@ def execute(context):
         i += nom
 
     df["household_id"] = hhl_id
+    print("Done")
     
     # Clean up
     df = df[[

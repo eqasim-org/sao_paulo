@@ -253,7 +253,7 @@ def compute_distances_actual(df_act, threshold = 25):
         (df_act["origin_y"] - df_act["destination_y"])**2
     )
     
-    df_act_dist = df_act[df_act["crowfly_distance"] < 25]
+    df_act_dist = df_act[df_act["crowfly_distance"] < threshold]
     return df_act_dist
 
 
@@ -303,16 +303,16 @@ def execute(context):
 
     # Merging together, comparing
     all_CC = pd.merge(syn_CC, act_CC, on = "Chain", how = "left")
-    activity_chains_comparison(context, all_CC)
+    #activity_chains_comparison(context, all_CC)
     
     # Number of activities    
-    activity_counts_comparison(context, all_CC)
+    #activity_counts_comparison(context, all_CC)
     
     # Number of activities per purposes
-    activity_counts_per_purpose(context, all_CC)
+    #activity_counts_per_purpose(context, all_CC)
 
     # 2. MODE AND DESTINATION PURPOSE
-    mode_purpose_comparison(context, df_syn, df_act)
+    #mode_purpose_comparison(context, df_syn, df_act)
 
 
     # 3. CROWFLY DISTANCES
@@ -328,8 +328,8 @@ def execute(context):
     syn = df_syn_dist.groupby(["following_purpose"]).mean()["crowfly_distance"] 
 
     # 3.3 Ready to plot!
-    myplottools.plot_comparison_bar(context, imtitle = "distancepurpose.png", plottitle = "Crowfly distance", ylabel = "Mean crowfly distance [km]", xlabel = "", lab = syn.index, actual = act, synthetic = syn, t = None, xticksrot = True )
-    all_the_plot_distances(context, df_act_dist, df_syn_dist)
+    #myplottools.plot_comparison_bar(context, imtitle = "distancepurpose.png", plottitle = "Crowfly distance", ylabel = "Mean crowfly distance [km]", xlabel = "", lab = syn.index, actual = act, synthetic = syn, t = None, xticksrot = True )
+    #all_the_plot_distances(context, df_act_dist, df_syn_dist)
     
     
     # 4. Do the same for men and women separated, aged 18 to 40
@@ -388,20 +388,20 @@ def execute(context):
     
     # Merging together, comparing
     M_all_CC = pd.merge(M_syn_CC, M_act_CC, on = "Chain", how = "left")
-    activity_chains_comparison(context, M_all_CC, "men")
+    #activity_chains_comparison(context, M_all_CC, "men")
     
     W_all_CC = pd.merge(W_syn_CC, W_act_CC, on = "Chain", how = "left")
-    activity_chains_comparison(context, W_all_CC, "women")
+    #activity_chains_comparison(context, W_all_CC, "women")
     
     activity_counts_comparison(context, M_all_CC, "men")
-    activity_counts_comparison(context, W_all_CC, "women")
+    #activity_counts_comparison(context, W_all_CC, "women")
     
     activity_counts_per_purpose(context, M_all_CC, "men")
-    activity_counts_per_purpose(context, W_all_CC, "women")
+    #activity_counts_per_purpose(context, W_all_CC, "women")
 
     # 4.3 Mode-purpose comparison
-    mode_purpose_comparison(context, df_syn_men, df_act_men, "men")
-    mode_purpose_comparison(context, df_syn_women, df_act_women, "women")
+    #mode_purpose_comparison(context, df_syn_men, df_act_men, "men")
+    #mode_purpose_comparison(context, df_syn_women, df_act_women, "women")
     
     # 4.4 Distance-purpose comparison
     df_syn_distM = compute_distances_synthetic(df_syn_men)

@@ -10,7 +10,7 @@ def configure(context):
 
 def execute(context):
     df_persons = context.stage("synthesis.population.sociodemographics")[[
-        "person_id", "hts_person_id", "age"
+        "person_id", "hts_person_id", "age", "sex", "residence_area_index"
     ]]
 
     df_trips = pd.DataFrame(context.stage("data.hts.cleaned")[1], copy = True)
@@ -35,7 +35,7 @@ def execute(context):
     df_trips.loc[:, "travel_time"] = df_trips.loc[:, "arrival_time"] - df_trips.loc[:, "departure_time"]
 
     df_trips = df_trips[[
-        "person_id", "trip_id", "departure_time", "arrival_time", "travel_time", "mode", "preceeding_purpose", "following_purpose", "age", "hts_person_id"
+        "person_id", "trip_id", "departure_time", "arrival_time", "travel_time", "mode", "preceeding_purpose", "following_purpose", "age", "hts_person_id", "residence_area_index", "sex"
     ]]
 
     df_trips = df_trips.sort_values(by = ["person_id", "trip_id"])
