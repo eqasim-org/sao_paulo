@@ -369,7 +369,11 @@ def execute(context):
                 df_ag = df_ag[df_ag["sex"] == sex_cat]
                 df_ag = df_ag[df_ag["residence_area_index"] == res_cat] 
 
-                educ_current = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, a_min,  a_max, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 3)
+                hts_trips = hts_trips_educ[np.logical_and(hts_trips_educ["age"] >= a_min, hts_trips_educ["age"] <= a_max)]
+                hts_trips = hts_trips[hts_trips["sex"] == sex_cat]
+                hts_trips = hts_trips[hts_trips["residence_area_index"] == res_cat]
+
+                educ_current = parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, a_min,  a_max, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 3)
                 dflist_educ.append(educ_current)
 
     education_locations = pd.concat(dflist_educ)

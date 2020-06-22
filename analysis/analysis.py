@@ -112,7 +112,7 @@ def activity_counts_comparison(context, all_CC, suffix = None):
         else:
             act = chain.split("-")
             x = len(act) - 2
-        
+        x = min(x, 7)
         if x not in counts_dic.keys():
             counts_dic[x] = [s, a]
         else:
@@ -120,8 +120,13 @@ def activity_counts_comparison(context, all_CC, suffix = None):
             counts_dic[x][1] += a
     
     counts = pd.DataFrame(columns = ["number", "synthetic Count", "actual Count"])
-    for k, v in counts_dic.items():
-        counts.loc[k] = pd.Series({"number": k, 
+    for k in range(8):
+        v = counts_dic[k]
+        if k == 7:
+            l = "7+"
+        else:
+            l = str(int(k))
+        counts.loc[k] = pd.Series({"number": l, 
                                       "synthetic Count": v[0],
                                       "actual Count": v[1]
                                           })
@@ -129,7 +134,7 @@ def activity_counts_comparison(context, all_CC, suffix = None):
     # Get percentages, prepare for plotting
     counts["synthetic Count"] = counts["synthetic Count"] / counts["synthetic Count"].sum() *100
     counts["actual Count"] = counts["actual Count"] / counts["actual Count"].sum() *100
-    counts = counts.sort_values(by=['actual Count'], ascending=False)
+    #counts = counts.sort_values(by=['actual Count'], ascending=False)
 
     # First step done: plot activity chain counts
     title_plot = "Synthetic and HTS activity counts comparison"
@@ -150,6 +155,7 @@ def activity_counts_per_purpose(context, all_CC, suffix = None):
     all_CC_dic = all_CC.to_dict('records')
     purposes = ['h', 'w', 'e', 's', 'l', 'o']
     counts_dic = {}
+    cpt = 0
     for actchain in all_CC_dic:
         chain = actchain["Chain"]
         s = actchain["synthetic Count"]
@@ -171,26 +177,33 @@ def activity_counts_per_purpose(context, all_CC, suffix = None):
                         identifier += " times"
                     else:
                         identifier += " time"
+                    if cpt_purpose >= 3 or (cpt_purpose == 2 and p not in ['h', 'w', 'e']):
+                        identifier = "Other"
                     if identifier not in counts_dic.keys():
-                        counts_dic[identifier] = [s,a]
+                        counts_dic[identifier] = [s, a]
                     else:
                         counts_dic[identifier][0] += s
                         counts_dic[identifier][1] += a
     
     counts = pd.DataFrame(columns = ["number", "synthetic Count", "actual Count"])
+
     for k, v in counts_dic.items():
         counts.loc[k] = pd.Series({"number": k, 
                                       "synthetic Count": v[0],
                                       "actual Count": v[1]
-                                          })   
-    
+                                          })
+            
+
     # Get percentages, prepare for plotting
     counts["synthetic Count"] = counts["synthetic Count"] / counts["synthetic Count"].sum() *100
     counts["actual Count"] = counts["actual Count"] / counts["actual Count"].sum() *100
     counts = counts.sort_values(by=['actual Count'], ascending=False)
+    val = "Other"
+    idx = counts.index.drop(val).tolist() + [val]
+    counts = counts.reindex(idx)
 
     # First step done: plot activity chain counts
-    title_plot = "Synthetic and HTS activity counts per purpose comparison"
+    title_plot = "Activity counts per purpose comparison"
     title_figure = "activitycountspurpose"
     if suffix:
         title_plot += " - " + suffix
@@ -303,16 +316,16 @@ def execute(context):
 
     # Merging together, comparing
     all_CC = pd.merge(syn_CC, act_CC, on = "Chain", how = "left")
-    #activity_chains_comparison(context, all_CC)
+    activity_chains_comparison(context, all_CC)
     
     # Number of activities    
-    #activity_counts_comparison(context, all_CC)
+    activity_counts_comparison(context, all_CC)
     
     # Number of activities per purposes
-    #activity_counts_per_purpose(context, all_CC)
+    activity_counts_per_purpose(context, all_CC)
 
     # 2. MODE AND DESTINATION PURPOSE
-    #mode_purpose_comparison(context, df_syn, df_act)
+    mode_purpose_comparison(context, df_syn, df_act)
 
 
     # 3. CROWFLY DISTANCES
@@ -328,8 +341,8 @@ def execute(context):
     syn = df_syn_dist.groupby(["following_purpose"]).mean()["crowfly_distance"] 
 
     # 3.3 Ready to plot!
-    #myplottools.plot_comparison_bar(context, imtitle = "distancepurpose.png", plottitle = "Crowfly distance", ylabel = "Mean crowfly distance [km]", xlabel = "", lab = syn.index, actual = act, synthetic = syn, t = None, xticksrot = True )
-    #all_the_plot_distances(context, df_act_dist, df_syn_dist)
+    myplottools.plot_comparison_bar(context, imtitle = "distancepurpose.png", plottitle = "Crowfly distance", ylabel = "Mean crowfly distance [km]", xlabel = "", lab = syn.index, actual = act, synthetic = syn, t = None, xticksrot = True )
+    all_the_plot_distances(context, df_act_dist, df_syn_dist)
     
     
     # 4. Do the same for men and women separated, aged 18 to 40
@@ -388,20 +401,20 @@ def execute(context):
     
     # Merging together, comparing
     M_all_CC = pd.merge(M_syn_CC, M_act_CC, on = "Chain", how = "left")
-    #activity_chains_comparison(context, M_all_CC, "men")
+    activity_chains_comparison(context, M_all_CC, "men")
     
     W_all_CC = pd.merge(W_syn_CC, W_act_CC, on = "Chain", how = "left")
-    #activity_chains_comparison(context, W_all_CC, "women")
+    activity_chains_comparison(context, W_all_CC, "women")
     
     activity_counts_comparison(context, M_all_CC, "men")
-    #activity_counts_comparison(context, W_all_CC, "women")
+    activity_counts_comparison(context, W_all_CC, "women")
     
     activity_counts_per_purpose(context, M_all_CC, "men")
-    #activity_counts_per_purpose(context, W_all_CC, "women")
+    activity_counts_per_purpose(context, W_all_CC, "women")
 
     # 4.3 Mode-purpose comparison
-    #mode_purpose_comparison(context, df_syn_men, df_act_men, "men")
-    #mode_purpose_comparison(context, df_syn_women, df_act_women, "women")
+    mode_purpose_comparison(context, df_syn_men, df_act_men, "men")
+    mode_purpose_comparison(context, df_syn_women, df_act_women, "women")
     
     # 4.4 Distance-purpose comparison
     df_syn_distM = compute_distances_synthetic(df_syn_men)

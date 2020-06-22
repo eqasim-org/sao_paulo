@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.rcParams.update({'font.size': 18})
+
 def autolabel(rects, ax):
     """Attach a text label above each bar in *rects*, displaying its height."""
     for rect in rects:
@@ -39,7 +41,7 @@ def add_small_cdf(axes, r, c, act, x, y, lab = ["Synthetic", "HTS"]):
     axes[r,c].plot(y_data[y_sorted], y_cdf, label=lab[1], color = "#A3A3A3")
     axes[r,c].plot(x_data[x_sorted], x_cdf, label=lab[0], color="#00205B")   
 
-    axes[r,c].set_ylabel("Percentage")
+    axes[r,c].set_ylabel("Probability")
     axes[r,c].set_xlabel("Crowfly Distance [km]")
     axes[r,c].set_title("Activity: " + act.capitalize())
     axes[r,c].legend(loc="best")
