@@ -351,7 +351,7 @@ def execute(context):
     df_agents = df_persons_same_zone.copy()
     df_trips = context.stage("synthesis.population.trips")
 
-    categories = {"age":[[0, 13], [14, 17], [18, 29], [30, 1000]], "gender":["male", "female"], "residence_area_index":[1,2,3]}
+    categories = {"age":[[0, 14], [15, 18], [19, 24], [25, 1000]], "gender":["male", "female"], "residence_area_index":[1,2,3]}
     dflist_educ = []
     for a_cat in categories["age"]:
         for sex_cat in categories["gender"]:
