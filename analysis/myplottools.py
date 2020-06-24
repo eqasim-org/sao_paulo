@@ -85,9 +85,11 @@ def plot_comparison_bar(context, imtitle, plottitle, ylabel, xlabel, lab, actual
         ax.set_xticklabels(labels)
 
     ax.legend()
-    plt.xticks(rotation=45)
+    plt.rcParams.update({'font.size': 12})
+    plt.xticks(rotation=60)
     fig.tight_layout()
     plt.savefig("%s/" % context.config("analysis_path") + imtitle)
+    plt.rcParams.update({'font.size': 18})
 
 
 def plot_comparison_hist_purpose(context, title, actual_df, synthetic_df, bins = np.linspace(0,25,120), dpi = 300, cols = 3, rows = 2):

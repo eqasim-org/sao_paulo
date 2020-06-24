@@ -3,6 +3,7 @@ import numpy as np
 import geopandas as gpd
 import analysis.myutils as myutils
 import analysis.myplottools as myplottools
+import matplotlib.pyplot as plt
 
 def configure(context):
     context.config("output_path")
@@ -20,6 +21,7 @@ def import_data_synthetic(context):
     t_id = df_syn["person_id"].values.tolist()
     df_persons_no_trip = df_persons[np.logical_not(df_persons["person_id"].isin(t_id))]
     df_persons_no_trip = df_persons_no_trip.set_index(["person_id"])
+
     return df_syn, df_persons_no_trip
 
 
@@ -270,6 +272,102 @@ def compute_distances_actual(df_act, threshold = 25):
     return df_act_dist
 
 
+def compare_dist_educ(context, df_syn, df_act, suffix = None):
+    pers_educ_syn = list(set(df_syn[df_syn["following_purpose"] == "education"]["person_id"].values))
+    pers_educ_act = list(set(df_act[df_act["destination_purpose"] == "education"].index.values))
+
+    df_syn_educ = df_syn[np.isin(df_syn["person_id"], pers_educ_syn)]
+    df_act_educ = df_act[np.isin(df_act.index, pers_educ_act)]
+
+    df_syn_h_e = df_syn_educ[np.logical_or( np.logical_and( df_syn_educ["preceeding_purpose"] == "home",  df_syn_educ["following_purpose"] == "education" ), np.logical_and(df_syn_educ["following_purpose"] == "home",  df_syn_educ["preceeding_purpose"] == "education")     )]
+    pers_he_syn = list(set(df_syn_h_e["person_id"].values))
+
+    df_act_h_e = df_act_educ[np.logical_or( np.logical_and( df_act_educ["origin_purpose"] == "home",  df_act_educ["destination_purpose"] == "education" ), np.logical_and(df_act_educ["destination_purpose"] == "home",  df_act_educ["origin_purpose"] == "education")     )]
+    pers_he_act = list(set(df_syn_h_e.index.values))
+
+    dic_syn = {"person_id": pers_educ_syn, "dist_home_educ": [0 for i in range(len(pers_educ_syn))]}
+    dic_act = {"person_id": pers_educ_act, "weight_person": [0 for i in range(len(pers_educ_act))], "dist_home_educ": [0 for i in range(len(pers_educ_act))]}
+
+    for i in range(len(pers_educ_syn)):
+        pid = pers_educ_syn[i]
+        df_pers = df_syn_educ[df_syn_educ["person_id"] == pid]
+        home_coord = None
+        educ_coord = None
+        for index, row in df_pers.iterrows():
+            if row["preceeding_purpose"] == "home":
+                home_coord = row["geometry"].coords[0]
+            if row["following_purpose"] == "home":
+                home_coord = row["geometry"].coords[1]
+            if row["preceeding_purpose"] == "education":
+                educ_coord = row["geometry"].coords[0]
+            if row["following_purpose"] == "education":
+                educ_coord = row["geometry"].coords[1]
+            if home_coord is not None and educ_coord is not None:
+                break
+        dic_syn["dist_home_educ"][i] = 0.001 * np.sqrt(((home_coord[0] - educ_coord[0]) ** 2 + (home_coord[1] - educ_coord[1]) ** 2))
+            
+
+    for i in range(len(pers_educ_act)):
+        pid = pers_educ_act[i]
+       
+        df_pers = df_act_educ[df_act_educ.index == pid]
+        home_x = None
+        educ_y = None
+        for index, row in df_pers.iterrows():
+            if row["origin_purpose"] == "home":
+                home_x = row["origin_x"]
+                home_y = row["origin_y"]
+            elif row["destination_purpose"] == "home":
+                home_x = row["destination_x"]
+                home_y = row["destination_y"]
+            if row["origin_purpose"] == "education":
+                educ_x = row["origin_x"]
+                educ_y = row["origin_y"]
+            elif row["destination_purpose"] == "education":
+                educ_x = row["destination_x"]
+                educ_y = row["destination_y"]
+            if educ_y is not None and home_y is not None:
+                break
+        dic_act["dist_home_educ"][i] = 0.001 * np.sqrt(((home_x - educ_x) ** 2 + (home_y - educ_y) ** 2))
+        dic_act["weight_person"][i] = row["weight_person"]
+
+    dist_df_syn = pd.DataFrame.from_dict(dic_syn)
+    dist_df_act = pd.DataFrame.from_dict(dic_act)
+
+    syn = dist_df_syn["dist_home_educ"].values
+    act = dist_df_act["dist_home_educ"].values
+    act_w = dist_df_act["weight_person"].values
+
+    fig, ax = plt.subplots(1,1)
+    x_data = np.array(syn, dtype=np.float64)
+    x_sorted = np.argsort(x_data)
+    x_weights = np.array([1.0 for i in range(len(syn))], dtype=np.float64)
+    x_cdf = np.cumsum(x_weights[x_sorted])
+    x_cdf /= x_cdf[-1]
+
+    y_data = np.array(act, dtype=np.float64)
+    y_sorted = np.argsort(y_data)
+    y_weights = np.array(act_w, dtype=np.float64)
+    y_cdf = np.cumsum(y_weights[y_sorted])
+    y_cdf /= y_cdf[-1]
+
+    ax.plot(y_data[y_sorted], y_cdf, label="Synthetic", color = "#A3A3A3")
+    ax.plot(x_data[x_sorted], x_cdf, label="Actual", color="#00205B")  
+
+    imtitle = "dist_home_educ"
+    plottitle = "Distance from home to education"
+    if suffix:
+        imtitle += "_" + suffix
+        plottitle  += " - " + suffix 
+    imtitle += ".png"
+
+    ax.set_ylabel("Probability")
+    ax.set_xlabel("Crowfly Distance [km]")
+    ax.legend(loc="best")
+    ax.set_title(plottitle)
+    plt.savefig("%s/" % context.config("analysis_path") + imtitle)
+
+
 def all_the_plot_distances(context, df_act_dist, df_syn_dist, suffix = None):
     dph_title = "distance_purpose_hist"
     dmh_title = "distance_mode_hist"
@@ -305,14 +403,10 @@ def execute(context):
     
     # Creating the new dataframes with activity chain counts
     syn_CC = myutils.process_synthetic_activity_chain_counts(df_syn)
-    syn_CC.loc[len(syn_CC) + 1] = pd.Series({"Chain": "h", 
-                                          "synthetic Count": df_syn_no_trip.shape[0]
-                                          })
+    syn_CC.loc[len(syn_CC) + 1] = pd.Series({"Chain": "h", "synthetic Count": df_syn_no_trip.shape[0] })
     
     act_CC = myutils.process_actual_activity_chain_counts(df_act, df_aux)
-    act_CC.loc[len(act_CC) + 1] = pd.Series({"Chain": "h", 
-                                          "actual Count": np.sum(df_act_no_trip["weight_person"].values.tolist())
-                                          })
+    act_CC.loc[len(act_CC) + 1] = pd.Series({"Chain": "h", "actual Count": np.sum(df_act_no_trip["weight_person"].values.tolist())})
 
     # Merging together, comparing
     all_CC = pd.merge(syn_CC, act_CC, on = "Chain", how = "left")
@@ -343,6 +437,9 @@ def execute(context):
     # 3.3 Ready to plot!
     myplottools.plot_comparison_bar(context, imtitle = "distancepurpose.png", plottitle = "Crowfly distance", ylabel = "Mean crowfly distance [km]", xlabel = "", lab = syn.index, actual = act, synthetic = syn, t = None, xticksrot = True )
     all_the_plot_distances(context, df_act_dist, df_syn_dist)
+
+    # 3.4 Distance from home to education
+    compare_dist_educ(context, df_syn, df_act)
     
     
     # 4. Do the same for men and women separated, aged 18 to 40
@@ -439,7 +536,23 @@ def execute(context):
                                     lab = synM.index, actual = actW, synthetic = synW, 
                                     t = None, xticksrot = True )
     all_the_plot_distances(context, df_act_distW, df_syn_distW, suffix = "women")
-    
+
+
+    # 4.5 Distance from home to education
+    compare_dist_educ(context, df_syn_women, df_act_women, suffix = "women")
+    compare_dist_educ(context, df_syn_men, df_act_men, suffix = "men")
+
+
+    # 5 Distance from home to education according to age
+    ages = [[0, 14], [15, 18], [19, 24], [25, 1000]]
+
+    for age in ages:
+        df_syn_age = df_syn[np.logical_and(df_syn["age"] >= age[0],
+                                           df_syn["age"] <= age[1] )]
+        df_act_age = df_act[np.logical_and(df_act["age"] >= age[0],
+                                           df_act["age"] <= age[1] )]
+        suf = "aged " + str(age[0]) + " to " + str(age[1])
+        compare_dist_educ(context, df_syn_age, df_act_age, suffix = suf)
 
 
 

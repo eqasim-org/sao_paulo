@@ -126,7 +126,6 @@ def execute(context):
 
     df_spatial = df_spatial.drop(columns = ["preceeding_geometry", "following_geometry"])
 
-    print(df_spatial.columns)
 
     df_spatial = gpd.GeoDataFrame(df_spatial, crs = dict(init = "epsg:29183"))
     df_spatial["following_purpose"] = df_spatial["following_purpose"].astype(str)
