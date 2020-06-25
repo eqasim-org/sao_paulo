@@ -366,6 +366,7 @@ def compare_dist_educ(context, df_syn, df_act, suffix = None):
     ax.legend(loc="best")
     ax.set_title(plottitle)
     plt.savefig("%s/" % context.config("analysis_path") + imtitle)
+    return syn, act, act_w
 
 
 def all_the_plot_distances(context, df_act_dist, df_syn_dist, suffix = None):
@@ -439,7 +440,7 @@ def execute(context):
     all_the_plot_distances(context, df_act_dist, df_syn_dist)
 
     # 3.4 Distance from home to education
-    compare_dist_educ(context, df_syn, df_act)
+    syn_0, act_0, act_w0 = compare_dist_educ(context, df_syn, df_act)
     
     
     # 4. Do the same for men and women separated, aged 18 to 40
@@ -546,15 +547,23 @@ def execute(context):
     # 5 Distance from home to education according to age
     ages = [[0, 14], [15, 18], [19, 24], [25, 1000]]
 
+    syn_means = [np.mean(syn_0)]
+    act_means = [np.average(act_0, weights = act_w0)]
+    labels = ["All"]
     for age in ages:
         df_syn_age = df_syn[np.logical_and(df_syn["age"] >= age[0],
                                            df_syn["age"] <= age[1] )]
         df_act_age = df_act[np.logical_and(df_act["age"] >= age[0],
                                            df_act["age"] <= age[1] )]
         suf = "aged " + str(age[0]) + " to " + str(age[1])
-        compare_dist_educ(context, df_syn_age, df_act_age, suffix = suf)
+        lab = str(age[0]) + " to " + str(age[1]) + " y. o."
+        syn, act, act_w = compare_dist_educ(context, df_syn_age, df_act_age, suffix = suf)
 
+        syn_means.append(np.mean(syn))
+        act_means.append(np.average(act, weights = act_w))
+        labels.append(lab)
 
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
 
     # Zipping modes in correct order
     #modes = zip(np.sort(df_syn["mode"].unique()),["car","car_passenger","pt", "taxi", "walk"])
