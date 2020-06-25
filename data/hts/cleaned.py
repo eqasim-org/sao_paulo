@@ -57,6 +57,9 @@ def execute(context):
                                                      3 : "yes", 4 : "no", 5 : "no", 
                                                      6 : "no", 7 : "no", 8 : "student"})
     df_persons.loc[(~(df_persons["studying"]== 1)) & (df_persons['employed']=='no'), "employed"] = "student"
+    # New purpose to trips done by agents aged 18 or more, not going to school but having a trip with education purpose
+    not_students = df_persons[np.logical_and(df_persons["age"] >= 18, df_persons["studying"] == 1)]["person_id"].values.tolist()
+    
     
     columnsToClean = ["person_id", "weight_person","origin_zone",
                      "origin_x","origin_y","origin_purpose",
@@ -139,6 +142,8 @@ def execute(context):
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in region and z not in city) for z in zone_id]
     df_persons["residence_area_index"] = sp_area
 
+    
+
     # Clean up
     df_persons = df_persons[[
         "person_id", "weight",
@@ -146,6 +151,10 @@ def execute(context):
     ]]
 
     # Trips
+
+    # New purpose to trips done by agents aged 18 or more, not going to school but having a trip with education purpose
+    mask = np.isin(df_trips["person_id"].values.tolist(), not_students)
+    df_trips.loc[np.logical_and(df_trips["destination_purpose"] == "education", mask), "destination_purpose"] = "other" 
 
     df_trips.loc[df_trips["destination_purpose"] == "shopping", "destination_purpose"] = "shop"
     df_trips.loc[df_trips["destination_purpose"] == "errand", "destination_purpose"] = "other"

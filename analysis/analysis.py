@@ -557,6 +557,8 @@ def execute(context):
                                            df_act["age"] <= age[1] )]
         suf = "aged " + str(age[0]) + " to " + str(age[1])
         lab = str(age[0]) + " to " + str(age[1]) + " y. o."
+        if age[1] == 1000:
+            lab = "25 +"
         syn, act, act_w = compare_dist_educ(context, df_syn_age, df_act_age, suffix = suf)
 
         syn_means.append(np.average(syn))
