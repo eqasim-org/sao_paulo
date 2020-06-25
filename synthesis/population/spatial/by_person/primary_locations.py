@@ -203,6 +203,57 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
     df_return = pd.concat([df_return_cp, df_return_ncp])
     assert len(df_return) == len(df_agents)
     return df_return
+    
+def impute_education_locations_same_zone_new(df_ag, hts_trips, df_candidates, df_travel, age_min, age_max, name):
+    hts_educ = hts_trips.copy()
+    hts_educ_cp = hts_educ[hts_educ["mode"]=="car_passenger"]
+    hts_educ_ncp = hts_educ[hts_educ["mode"]!="car_passenger"]
+
+    dist_educ_cp = hts_educ
+    hist_cp, bins_cp = np.histogram(dist_educ_cp["commute_distance_education"], weights = dist_educ_cp["weight"], bins = 500)
+    
+    df_trips = df_travel.copy()
+
+    cp_ids = list(set(df_trips["hts_person_id"].values))
+
+    df_agents = df_ag.copy()
+    df_agents_cp  = df_agents[np.isin(df_agents["hts_person_id"], cp_ids)]
+
+    assert len(df_agents_cp) == len(df_agents)
+
+    home_coordinates_cp = list(zip(df_agents_cp["home_x"], df_agents_cp["home_y"]))
+    education_coordinates = np.array(list(zip(df_candidates["x"], df_candidates["y"])))
+
+    bin_midpoints = bins_cp[:-1] + np.diff(bins_cp)/2
+    cdf = np.cumsum(hist_cp)
+    cdf = cdf / cdf[-1]
+    values = np.random.rand(len(df_agents_cp))
+    value_bins = np.searchsorted(cdf, values)
+    random_from_cdf_cp = bin_midpoints[value_bins] # in meters
+    
+    tree = KDTree(education_coordinates)
+    indices_cp, distances_cp = tree.query_radius(home_coordinates_cp, r=random_from_cdf_cp, return_distance = True, sort_results=True)
+
+    # In some cases no education facility was found within the given radius. In this case select the nearest facility.
+    for i in range(len(indices_cp)):
+        l = indices_cp[i] 
+        if len(l) == 0:
+            dist, ind = tree.query(np.array(home_coordinates_cp[i]).reshape(1,-1), 2, return_distance = True, sort_results=True)
+            fac = ind[0][1]
+            indices_cp[i] = [fac]
+            distances_cp[i] = [dist[0][1]]
+
+    indices_cp = [l[-1] for l in indices_cp]
+    distances_cp = [d[-1] for d in distances_cp]
+
+    df_return_cp = df_agents_cp
+    df_return_cp["x"] = df_candidates.iloc[indices_cp]["x"].values
+    df_return_cp["y"] = df_candidates.iloc[indices_cp]["y"].values
+    df_return_cp["location_id"]  = df_candidates.iloc[indices_cp]["location_id"].values
+
+    df_return = df_return_cp
+    assert len(df_return) == len(df_agents)
+    return df_return    
 
 def parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, age_min, age_max, name, func, n_cores=24):
     df_split = np.array_split(df_ag, n_cores)
@@ -373,7 +424,7 @@ def execute(context):
                 hts_trips = hts_trips[hts_trips["sex"] == sex_cat]
                 hts_trips = hts_trips[hts_trips["residence_area_index"] == res_cat]
 
-                educ_current = parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, a_min,  a_max, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 3)
+                educ_current = parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, a_min,  a_max, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone_new, 3)
                 dflist_educ.append(educ_current)
 
     education_locations = pd.concat(dflist_educ)
