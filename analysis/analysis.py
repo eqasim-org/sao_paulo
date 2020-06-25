@@ -351,8 +351,8 @@ def compare_dist_educ(context, df_syn, df_act, suffix = None):
     y_cdf = np.cumsum(y_weights[y_sorted])
     y_cdf /= y_cdf[-1]
 
-    ax.plot(y_data[y_sorted], y_cdf, label="Synthetic", color = "#A3A3A3")
-    ax.plot(x_data[x_sorted], x_cdf, label="Actual", color="#00205B")  
+    ax.plot(y_data[y_sorted], y_cdf, label="Actual", color = "#A3A3A3")
+    ax.plot(x_data[x_sorted], x_cdf, label="Synthetic", color="#00205B")  
 
     imtitle = "dist_home_educ"
     plottitle = "Distance from home to education"
@@ -559,7 +559,7 @@ def execute(context):
         lab = str(age[0]) + " to " + str(age[1]) + " y. o."
         syn, act, act_w = compare_dist_educ(context, df_syn_age, df_act_age, suffix = suf)
 
-        syn_means.append(np.mean(syn))
+        syn_means.append(np.average(syn))
         act_means.append(np.average(act, weights = act_w))
         labels.append(lab)
 
