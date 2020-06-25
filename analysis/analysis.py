@@ -53,7 +53,7 @@ def import_data_actual(context):
     # Merging with person information, correcting trips with erroneous purpose
     df_act_persons.rename(columns = {"weight":"weight_person", "employment":"employed", "binary_car_availability":"number_of_cars"}, inplace = True)
     df_act = df_act_trips.merge(df_act_persons[["person_id", "weight_person", "employed", 
-                                                "age", "household_income", "sex", "number_of_cars"]],
+                                                "age", "household_income", "sex", "number_of_cars", "residence_area_index"]],
                                 on=["person_id"], how='left')
     df_act.loc[(df_act["destination_purpose"]=='work') & (df_act["age"] < 16), "destination_purpose"]="other"
     df_act.loc[(df_act["origin_purpose"]=='work') & (df_act["age"] < 16), "origin_purpose"]="other"
@@ -66,6 +66,8 @@ def import_data_actual(context):
     t_id = df_act_trips["person_id"].values.tolist()
     df_persons_no_trip = df_act_persons[np.logical_not(df_act_persons["person_id"].isin(t_id))]
     df_persons_no_trip = df_persons_no_trip.set_index(["person_id"])
+
+    print(df_act.columns)
     return df_act, df_persons_no_trip
 
 
