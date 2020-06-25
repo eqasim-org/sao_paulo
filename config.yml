@@ -13,7 +13,7 @@ run:
   #- synthesis.population.spatial.by_person.primary_zones
   #- synthesis.population.spatial.by_person.primary_locations
   #- synthesis.population.spatial.by_person.secondary.locations
-  #- synthesis.output # To create the output population in the output_path (see below)
+  - synthesis.output # To create the output population in the output_path (see below)
   #- synthesis.population.spatial.locations
   #- synthesis.population.activities
   #- matsim.scenario.population

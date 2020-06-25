@@ -565,7 +565,56 @@ def execute(context):
         act_means.append(np.average(act, weights = act_w))
         labels.append(lab)
 
-    myplottools.plot_comparison_bar(context,"avdisthomeeduc.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - age.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+
+    # 6. Distance from home to education according to residence area
+
+    areas = [1,2,3]
+
+    syn_means = [np.mean(syn_0)]
+    act_means = [np.average(act_0, weights = act_w0)]
+    labels = ["All"]
+    for area in areas:
+        df_syn_area = df_syn[df_syn["residence_area_index"] == area]
+        df_act_area = df_act[df_act["residence_area_index"] == area]
+        suf = "agents living in "
+        if area == 1:
+            suf += " rest of the state"
+            lab = "rest of the state"
+        if area == 2 :
+            suf += " city"
+            lab = "city of Sao Paulo"
+        if area == 3 :
+            suf += " downtown"
+            lab = "downtown"
+
+        syn, act, act_w = compare_dist_educ(context, df_syn_area, df_act_area, suffix = suf)
+        syn_means.append(np.average(syn))
+        act_means.append(np.average(act, weights = act_w))
+        labels.append(lab)
+
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - area.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+
+
+    # 7. Distance from home to education according to gender
+
+    genders = ["male","female"]
+
+    syn_means = [np.mean(syn_0)]
+    act_means = [np.average(act_0, weights = act_w0)]
+    labels = ["All"]
+    for gender in genders:
+        df_syn_gender = df_syn[df_syn["sex"] == gender]
+        df_act_gender = df_act[df_act["sex"] == gender]
+        suf = gender
+        lab = gender
+
+        syn, act, act_w = compare_dist_educ(context, df_syn_gender, df_act_gender, suffix = suf)
+        syn_means.append(np.average(syn))
+        act_means.append(np.average(act, weights = act_w))
+        labels.append(lab)
+
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - gender.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
 
     # Zipping modes in correct order
     #modes = zip(np.sort(df_syn["mode"].unique()),["car","car_passenger","pt", "taxi", "walk"])
