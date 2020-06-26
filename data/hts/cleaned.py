@@ -154,7 +154,8 @@ def execute(context):
 
     # New purpose to trips done by agents aged 18 or more, not going to school but having a trip with education purpose
     mask = np.isin(df_trips["person_id"].values.tolist(), not_students)
-    df_trips.loc[np.logical_and(df_trips["destination_purpose"] == "education", mask), "destination_purpose"] = "other" 
+    df_trips.loc[np.logical_and(df_trips["destination_purpose"] == "education", mask), "destination_purpose"] = "other"
+    df_trips.loc[np.logical_and(df_trips["origin_purpose"] == "education", mask), "origin_purpose"] = "other" 
 
     df_trips.loc[df_trips["destination_purpose"] == "shopping", "destination_purpose"] = "shop"
     df_trips.loc[df_trips["destination_purpose"] == "errand", "destination_purpose"] = "other"

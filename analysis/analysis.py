@@ -541,11 +541,6 @@ def execute(context):
     all_the_plot_distances(context, df_act_distW, df_syn_distW, suffix = "women")
 
 
-    # 4.5 Distance from home to education
-    compare_dist_educ(context, df_syn_women, df_act_women, suffix = "women")
-    compare_dist_educ(context, df_syn_men, df_act_men, suffix = "men")
-
-
     # 5 Distance from home to education according to age
     ages = [[0, 14], [15, 18], [19, 24], [25, 1000]]
 
