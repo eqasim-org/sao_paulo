@@ -38,7 +38,7 @@ def execute(context):
 			<param name="subnetworkMode" value="car" />
 		</parameterset>
 		<parameterset type="routableSubnetwork" >
-			<param name="allowedTransportModes" value="bus,car" />
+			<param name="allowedTransportModes" value="bus,car,car_passenger,taxi" />
 			<param name="subnetworkMode" value="bus" />
 		</parameterset>
 		<parameterset type="wayDefaultParams" >
@@ -172,7 +172,7 @@ def execute(context):
 			<param name="osmValue" value="residential" />
 		</parameterset>
 		<parameterset type="wayDefaultParams" >
-			<param name="allowedTransportModes" value="car" />
+			<param name="allowedTransportModes" value="car,car_passenger,taxi" />
 			<param name="freespeed" value="5.55" />
 			<param name="freespeedFactor" value="1.0" />
 			<param name="laneCapacity" value="600.0" />
