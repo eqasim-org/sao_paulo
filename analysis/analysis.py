@@ -53,7 +53,7 @@ def import_data_actual(context):
     # Merging with person information, correcting trips with erroneous purpose
     df_act_persons.rename(columns = {"weight":"weight_person", "employment":"employed", "binary_car_availability":"number_of_cars"}, inplace = True)
     df_act = df_act_trips.merge(df_act_persons[["person_id", "weight_person", "employed", 
-                                                "age", "household_income", "sex", "number_of_cars"]],
+                                                "age", "household_income", "sex", "number_of_cars", "residence_area_index"]],
                                 on=["person_id"], how='left')
     df_act.loc[(df_act["destination_purpose"]=='work') & (df_act["age"] < 16), "destination_purpose"]="other"
     df_act.loc[(df_act["origin_purpose"]=='work') & (df_act["age"] < 16), "origin_purpose"]="other"
@@ -66,6 +66,8 @@ def import_data_actual(context):
     t_id = df_act_trips["person_id"].values.tolist()
     df_persons_no_trip = df_act_persons[np.logical_not(df_act_persons["person_id"].isin(t_id))]
     df_persons_no_trip = df_persons_no_trip.set_index(["person_id"])
+
+    print(df_act.columns)
     return df_act, df_persons_no_trip
 
 
@@ -539,11 +541,6 @@ def execute(context):
     all_the_plot_distances(context, df_act_distW, df_syn_distW, suffix = "women")
 
 
-    # 4.5 Distance from home to education
-    compare_dist_educ(context, df_syn_women, df_act_women, suffix = "women")
-    compare_dist_educ(context, df_syn_men, df_act_men, suffix = "men")
-
-
     # 5 Distance from home to education according to age
     ages = [[0, 14], [15, 18], [19, 24], [25, 1000]]
 
@@ -565,7 +562,56 @@ def execute(context):
         act_means.append(np.average(act, weights = act_w))
         labels.append(lab)
 
-    myplottools.plot_comparison_bar(context,"avdisthomeeduc.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - age.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+
+    # 6. Distance from home to education according to residence area
+
+    areas = [1,2,3]
+
+    syn_means = [np.mean(syn_0)]
+    act_means = [np.average(act_0, weights = act_w0)]
+    labels = ["All"]
+    for area in areas:
+        df_syn_area = df_syn[df_syn["residence_area_index"] == area]
+        df_act_area = df_act[df_act["residence_area_index"] == area]
+        suf = "agents living in "
+        if area == 1:
+            suf += " rest of the state"
+            lab = "rest of the state"
+        if area == 2 :
+            suf += " city"
+            lab = "city of Sao Paulo"
+        if area == 3 :
+            suf += " downtown"
+            lab = "downtown"
+
+        syn, act, act_w = compare_dist_educ(context, df_syn_area, df_act_area, suffix = suf)
+        syn_means.append(np.average(syn))
+        act_means.append(np.average(act, weights = act_w))
+        labels.append(lab)
+
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - area.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
+
+
+    # 7. Distance from home to education according to gender
+
+    genders = ["male","female"]
+
+    syn_means = [np.mean(syn_0)]
+    act_means = [np.average(act_0, weights = act_w0)]
+    labels = ["All"]
+    for gender in genders:
+        df_syn_gender = df_syn[df_syn["sex"] == gender]
+        df_act_gender = df_act[df_act["sex"] == gender]
+        suf = gender
+        lab = gender
+
+        syn, act, act_w = compare_dist_educ(context, df_syn_gender, df_act_gender, suffix = suf)
+        syn_means.append(np.average(syn))
+        act_means.append(np.average(act, weights = act_w))
+        labels.append(lab)
+
+    myplottools.plot_comparison_bar(context,"avdisthomeeduc - gender.png", "Average distances from home to education", "Average distance [km]", "Population group", labels, act_means, syn_means)
 
     # Zipping modes in correct order
     #modes = zip(np.sort(df_syn["mode"].unique()),["car","car_passenger","pt", "taxi", "walk"])
