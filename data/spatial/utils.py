@@ -42,7 +42,6 @@ def impute(df_points, df_zones, point_id_field, zone_id_field, fix_by_distance =
 
     if "left_index" in df_points: del df_points["left_index"]
     if "right_index" in df_points: del df_points["right_index"]
-    #print(df_points.dtypes)
     invalid_mask = pd.isnull(df_points[zone_id_field])
 
     if fix_by_distance and np.any(invalid_mask):

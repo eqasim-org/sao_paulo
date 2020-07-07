@@ -57,6 +57,9 @@ def execute(context):
                                                      3 : "yes", 4 : "no", 5 : "no", 
                                                      6 : "no", 7 : "no", 8 : "student"})
     df_persons.loc[(~(df_persons["studying"]== 1)) & (df_persons['employed']=='no'), "employed"] = "student"
+    # New purpose to trips done by agents aged 18 or more, not going to school but having a trip with education purpose
+    not_students = df_persons[np.logical_and(df_persons["age"] >= 18, df_persons["studying"] == 1)]["person_id"].values.tolist()
+    
     
     columnsToClean = ["person_id", "weight_person","origin_zone",
                      "origin_x","origin_y","origin_purpose",
@@ -115,7 +118,7 @@ def execute(context):
     
     df_zones = context.stage("data.spatial.zones")[["zone_id", "geometry"]]
     df_persons["geometry"] = [geo.Point(*xy) for xy in zip(df_persons["homeCoordX"], df_persons["homeCoordY"])]
-    df_geo = gpd.GeoDataFrame(df_persons, crs = {"init" : "epsg:29183"})
+    df_geo = gpd.GeoDataFrame(df_persons, crs = {"init" : "EPSG:29183"})
     # only take necessary rows into account to speed up process
     home_zones = gpd.sjoin(df_geo[["person_id","geometry"]], df_zones[["zone_id","geometry"]], op = "within",how="left")
     # we ensure with the sjoin how="left" parameter, that GEOID is in the correct order
@@ -125,9 +128,13 @@ def execute(context):
 
      # Import shapefiles defining the different zones
     center = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_center.shp" % context.config("data_path"))
+    center["AP_2010_CH"] = center["AP_2010_CH"].astype(np.int)
     center = center["AP_2010_CH"].values.tolist()
-    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path"))
+
+    city = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_city.shp" % context.config("data_path")) 
+    city["AP_2010_CH"] = city["AP_2010_CH"].astype(np.int)
     city = city["AP_2010_CH"].values.tolist()
+
     region = context.stage("data.spatial.zones")
     region = region["zone_id"].values.tolist()
 
@@ -135,6 +142,7 @@ def execute(context):
     sp_area = [3 * (z in center) + 2 * (z in city and z not in center) + 1 * (z in region and z not in city) for z in zone_id]
     df_persons["residence_area_index"] = sp_area
 
+    
 
     # Clean up
     df_persons = df_persons[[
@@ -143,6 +151,11 @@ def execute(context):
     ]]
 
     # Trips
+
+    # New purpose to trips done by agents aged 18 or more, not going to school but having a trip with education purpose
+    mask = np.isin(df_trips["person_id"].values.tolist(), not_students)
+    df_trips.loc[np.logical_and(df_trips["destination_purpose"] == "education", mask), "destination_purpose"] = "other"
+    df_trips.loc[np.logical_and(df_trips["origin_purpose"] == "education", mask), "origin_purpose"] = "other" 
 
     df_trips.loc[df_trips["destination_purpose"] == "shopping", "destination_purpose"] = "shop"
     df_trips.loc[df_trips["destination_purpose"] == "errand", "destination_purpose"] = "other"
@@ -364,5 +377,6 @@ def execute(context):
     df_persons["is_passenger"] = df_persons["is_passenger"].fillna(False)
     df_persons["is_passenger"] = df_persons["is_passenger"].astype(np.bool)
 
-
+    df_persons.to_csv("%s/HTS/personsHTS.csv" % context.config("data_path") )
+    df_trips.to_csv("%s/HTS/tripsHTS.csv" % context.config("data_path") )
     return df_persons, df_trips

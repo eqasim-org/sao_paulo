@@ -78,7 +78,7 @@ def execute(context):
     ])
     assert os.path.exists("%s/generic_config.xml" % context.path())
 
-    # Adapt config for Île-de-France
+    # Adapt config for Sao Paulo
     eqasim.run(context, "org.eqasim.sao_paulo.scenario.RunAdaptConfig", [
         "--input-path", "generic_config.xml",
         "--output-path", "sao_paulo_config.xml"

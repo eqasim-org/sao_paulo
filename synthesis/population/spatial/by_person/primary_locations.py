@@ -122,25 +122,23 @@ def impute_locations(df_persons, df_zones, df_locations, threads, identifier = "
 def deg_to_rad(angle):
     return angle * np.pi / 180
 
+
 def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_travel, age_min, age_max, name):
     hts_educ = hts_trips.copy()
-    hts_educ = hts_educ[np.logical_and(hts_educ["age"] >= age_min, hts_educ["age"] < age_max)]
     hts_educ_cp = hts_educ[hts_educ["mode"]=="car_passenger"]
     hts_educ_ncp = hts_educ[hts_educ["mode"]!="car_passenger"]
 
-    dist_educ_cp = hts_educ_cp#["crowfly_distance"]
+    dist_educ_cp = hts_educ_cp
     hist_cp, bins_cp = np.histogram(dist_educ_cp["commute_distance_education"], weights = dist_educ_cp["weight"], bins = 500)
 
-    dist_educ_ncp = hts_educ_ncp#["crowfly_distance"]
+    dist_educ_ncp = hts_educ_ncp
     hist_ncp, bins_ncp = np.histogram(dist_educ_ncp["commute_distance_education"], weights = dist_educ_ncp["weight"], bins = 500)
 
     df_trips = df_travel.copy()
-    #df_trips = df_trips[np.logical_and(df_trips["age"] >= age_min, df_trips["age"] < age_max)]
 
     cp_ids = list(set(df_trips[df_trips["mode"]=="car_passenger"]["hts_person_id"].values))
 
     df_agents = df_ag.copy()
-    #df_agents = df_agents[np.logical_and(df_agents["age"] >= age_min, df_agents["age"] < age_max)]
     df_agents_cp  = df_agents[np.isin(df_agents["hts_person_id"], cp_ids)]
     df_agents_ncp  = df_agents[np.logical_not(np.isin(df_agents["hts_person_id"], df_agents_cp["hts_person_id"]))]
 
@@ -167,7 +165,6 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
     value_bins = np.searchsorted(cdf, values)
     random_from_cdf_ncp = bin_midpoints[value_bins] # in meters
     
-    #tree = KDTree(education_coordinates)
     indices_ncp, distances_ncp = tree.query_radius(home_coordinates_ncp, r=random_from_cdf_ncp, return_distance = True, sort_results=True)
 
     # In some cases no education facility was found within the given radius. In this case select the nearest facility.
@@ -193,7 +190,6 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
     indices_ncp = [l[-1] for l in indices_ncp]
     distances_ncp = [d[-1] for d in distances_ncp]
 
-    #f_persons = (df_agents["zone_id_x"] == df_agents["zone_id_y"])
     df_return_cp = df_agents_cp
     df_return_cp["x"] = df_candidates.iloc[indices_cp]["x"].values
     df_return_cp["y"] = df_candidates.iloc[indices_cp]["y"].values
@@ -207,6 +203,57 @@ def impute_education_locations_same_zone(df_ag, hts_trips, df_candidates, df_tra
     df_return = pd.concat([df_return_cp, df_return_ncp])
     assert len(df_return) == len(df_agents)
     return df_return
+    
+def impute_education_locations_same_zone_new(df_ag, hts_trips, df_candidates, df_travel, age_min, age_max, name):
+    hts_educ = hts_trips.copy()
+    hts_educ_cp = hts_educ[hts_educ["mode"]=="car_passenger"]
+    hts_educ_ncp = hts_educ[hts_educ["mode"]!="car_passenger"]
+
+    dist_educ_cp = hts_educ
+    hist_cp, bins_cp = np.histogram(dist_educ_cp["commute_distance_education"], weights = dist_educ_cp["weight"], bins = 500)
+    
+    df_trips = df_travel.copy()
+
+    cp_ids = list(set(df_trips["hts_person_id"].values))
+
+    df_agents = df_ag.copy()
+    df_agents_cp  = df_agents[np.isin(df_agents["hts_person_id"], cp_ids)]
+
+    assert len(df_agents_cp) == len(df_agents)
+
+    home_coordinates_cp = list(zip(df_agents_cp["home_x"], df_agents_cp["home_y"]))
+    education_coordinates = np.array(list(zip(df_candidates["x"], df_candidates["y"])))
+
+    bin_midpoints = bins_cp[:-1] + np.diff(bins_cp)/2
+    cdf = np.cumsum(hist_cp)
+    cdf = cdf / cdf[-1]
+    values = np.random.rand(len(df_agents_cp))
+    value_bins = np.searchsorted(cdf, values)
+    random_from_cdf_cp = bin_midpoints[value_bins] # in meters
+    
+    tree = KDTree(education_coordinates)
+    indices_cp, distances_cp = tree.query_radius(home_coordinates_cp, r=random_from_cdf_cp, return_distance = True, sort_results=True)
+
+    # In some cases no education facility was found within the given radius. In this case select the nearest facility.
+    for i in range(len(indices_cp)):
+        l = indices_cp[i] 
+        if len(l) == 0:
+            dist, ind = tree.query(np.array(home_coordinates_cp[i]).reshape(1,-1), 2, return_distance = True, sort_results=True)
+            fac = ind[0][1]
+            indices_cp[i] = [fac]
+            distances_cp[i] = [dist[0][1]]
+
+    indices_cp = [l[-1] for l in indices_cp]
+    distances_cp = [d[-1] for d in distances_cp]
+
+    df_return_cp = df_agents_cp
+    df_return_cp["x"] = df_candidates.iloc[indices_cp]["x"].values
+    df_return_cp["y"] = df_candidates.iloc[indices_cp]["y"].values
+    df_return_cp["location_id"]  = df_candidates.iloc[indices_cp]["location_id"].values
+
+    df_return = df_return_cp
+    assert len(df_return) == len(df_agents)
+    return df_return    
 
 def parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, age_min, age_max, name, func, n_cores=24):
     df_split = np.array_split(df_ag, n_cores)
@@ -264,6 +311,7 @@ def impute_work_locations_same_zone(hts_trips, df_ag, df_candidates, df_travel, 
     assert len(df_return) == len(df_agents)
     return df_return
 
+
 def execute(context):
     threads = context.config("processes")
     df_zones = context.stage("data.spatial.zones")[["zone_id", "geometry"]]
@@ -309,7 +357,6 @@ def execute(context):
     df_work = impute_locations(df_work_different_zone, df_zones, df_work_locations, 24)[["person_id", "x", "y", "location_id"]]
     
     print("Imputing same zone work locations ...")
-
     df_work_same_zone = df_work_zones.copy()
     df_work_same_zone = df_work_same_zone[df_work_same_zone["work_id"]==df_work_same_zone["home_id"]]
     f_persons = (df_work_same_zone["work_id"] == df_work_same_zone["home_id"])
@@ -325,14 +372,13 @@ def execute(context):
     hts_trips_work = hts_trips_work[hts_trips_work["origin_zone"] == hts_trips_work["destination_zone"]]
     df_agents = df_work_same_zone.copy()
     df_trips = context.stage("synthesis.population.trips")
-    print("Imputing work same-zone  locations ...")
 
     work_locations = impute_work_locations_same_zone(hts_trips_work, df_agents, df_candidates, df_trips, "/home/asallard/Scenarios/work.png")
     df_work_same_zone = work_locations[["person_id", "x", "y", "location_id"]]    
 
     df_work = df_work.append(df_work_same_zone, sort = False)        
 
-    print("\n\n\n\n\n\n\n\n\n\n\n\n")
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
     print("Imputing education locations ...")
     df_persons = context.stage("synthesis.population.spatial.by_person.primary_zones")[2]
     df_persons.rename(columns = {"zone_id":"education_id"}, inplace = True) 
@@ -340,8 +386,11 @@ def execute(context):
     df_persons = pd.merge(df_persons, df_commute)
     df_persons = pd.merge(df_persons, df_home.rename({"x" : "home_x", "y" : "home_y"}, axis = 1), on = ["person_id"])
     df_persons["age"] = df_persons["age_x"]
+    df_persons["residence_area_index"] = df_persons["residence_area_index_x"]
     
-    df_persons_same_zone = pd.merge(df_persons,df_households,on=["person_id", "household_id"], how='left')
+    df_persons_same_zone = pd.merge(df_persons, df_households, on=["person_id", "household_id"], how='left')
+    df_persons_same_zone = df_persons_same_zone.drop(columns = ["age_x", "age_y", "residence_area_index_x", "residence_area_index_y"])
+
     df_education_locations = context.stage("synthesis.destinations")
     df_candidates = df_education_locations[df_education_locations["offers_education"]]
         
@@ -353,32 +402,32 @@ def execute(context):
     df_agents = df_persons_same_zone.copy()
     df_trips = context.stage("synthesis.population.trips")
 
-    df_travel = df_trips.copy()
-    df_travel = df_travel[np.logical_and(df_travel["age"] >= 0, df_travel["age"] < 14)]
-    df_ag = df_agents.copy()
-    df_ag = df_ag[np.logical_and(df_ag["age"] >= 0, df_ag["age"] < 14)]
-    
-    educ_0_14 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 0,  14, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone, 24)
+    categories = {"age":[[0, 14], [15, 18], [19, 24], [25, 1000]], "gender":["male", "female"], "residence_area_index":[1,2,3]}
+    dflist_educ = []
+    for a_cat in categories["age"]:
+        for sex_cat in categories["gender"]:
+            for res_cat in categories["residence_area_index"]:
+                a_min = a_cat[0]
+                a_max = a_cat[1]
 
-    df_travel = df_trips.copy()
-    df_travel = df_travel[np.logical_and(df_travel["age"] >= 14, df_travel["age"] < 18)]
-    df_ag = df_agents.copy()
-    df_ag = df_ag[np.logical_and(df_ag["age"] >= 14, df_ag["age"] < 18)]
-    educ_14_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 14,  18, "/home/asallard/Scenarios/educ1418.png", impute_education_locations_same_zone, 24)
-    
-    df_travel = df_trips.copy()
-    df_travel = df_travel[np.logical_and(df_travel["age"] >= 18, df_travel["age"] < 30)]
-    df_ag = df_agents.copy()
-    df_ag = df_ag[np.logical_and(df_ag["age"] >= 18, df_ag["age"] < 30)]
-    educ_above_18 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 18,  30, "/home/asallard/Scenarios/educabove18.png", impute_education_locations_same_zone, 24)
-    
-    df_travel = df_trips.copy()
-    df_travel = df_travel[np.logical_and(df_travel["age"] >= 30, df_travel["age"] < 1000)]
-    df_ag = df_agents.copy()
-    df_ag = df_ag[np.logical_and(df_ag["age"] >= 30, df_ag["age"] < 1000)]
-    educ_above_30 = parallelize_dataframe(hts_trips_educ, df_ag, df_candidates, df_travel, 30,  1000, "/home/asallard/Scenarios/educabove30.png", impute_education_locations_same_zone, 24)
+                df_travel = df_trips.copy()
+                df_travel = df_travel[np.logical_and(df_travel["age"] >= a_min, df_travel["age"] <= a_max)]
+                df_travel = df_travel[df_travel["sex"] == sex_cat]
+                df_travel = df_travel[df_travel["residence_area_index"] == res_cat]
 
-    education_locations = pd.concat([educ_0_14, educ_14_18, educ_above_18, educ_above_30])
+                df_ag = df_agents.copy()
+                df_ag = df_ag[np.logical_and(df_ag["age"] >= a_min, df_ag["age"] <= a_max)]
+                df_ag = df_ag[df_ag["sex"] == sex_cat]
+                df_ag = df_ag[df_ag["residence_area_index"] == res_cat] 
+
+                hts_trips = hts_trips_educ[np.logical_and(hts_trips_educ["age"] >= a_min, hts_trips_educ["age"] <= a_max)]
+                hts_trips = hts_trips[hts_trips["sex"] == sex_cat]
+                hts_trips = hts_trips[hts_trips["residence_area_index"] == res_cat]
+
+                educ_current = parallelize_dataframe(hts_trips, df_ag, df_candidates, df_travel, a_min,  a_max, "/home/asallard/Scenarios/educ014.png", impute_education_locations_same_zone_new, 3)
+                dflist_educ.append(educ_current)
+
+    education_locations = pd.concat(dflist_educ)
     df_persons_same_zone = education_locations[["person_id", "x", "y", "location_id"]]
 
     df_education = df_persons_same_zone    

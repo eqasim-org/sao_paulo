@@ -15,16 +15,16 @@ def execute(context):
     df_zones = context.stage("data.spatial.zones")
 	
     df_opportunities = context.stage("data.opportunities.extract_roads_osm") 
-    df_opportunities = df_opportunities[["x", "y"]]
-    df_opportunities.columns = ["x", "y"]    
+    df_opportunities = df_opportunities[["x", "y", "purpose"]]
+    df_opportunities.columns = ["x", "y", "purpose"]    
     
-    df_opportunities["offers_work"] = True
+    df_opportunities["offers_work"] = df_opportunities["purpose"].str.contains("work")
     df_opportunities["offers_other"] = True
-    df_opportunities["offers_leisure"] = True
-    df_opportunities["offers_shop"] = True 
+    df_opportunities["offers_leisure"] = df_opportunities["purpose"].str.contains("leisure")
+    df_opportunities["offers_shop"] = df_opportunities["purpose"].str.contains("shop") 
     df_opportunities["offers_education"] = False
-    df_opportunities["offers_home"] = True
-    
+    df_opportunities["offers_home"] = df_opportunities["purpose"].str.contains("home")
+    df_opportunities = df_opportunities.drop(["purpose"], axis=1)
     df_opportunities = data.spatial.utils.to_gpd(df_opportunities, crs = {"init" : "EPSG:4326"}).to_crs({"init" : "EPSG:29183"})
     
     ## read the educational facilities and attach them to the opportunities

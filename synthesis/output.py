@@ -43,8 +43,10 @@ def execute(context):
         "person_id", "household_id",
         "age", "employment", "sex", "has_pt_subscription",
 	"has_license",
-        "census_person_id", "hts_person_id"
+        "census_person_id", "hts_person_id", "residence_area_index"
     ]]
+
+    print(df_persons.columns)
 
     df_persons.to_csv("%s/persons.csv" % output_path, sep = ";", index = None)
 
@@ -126,7 +128,6 @@ def execute(context):
 
     df_spatial = df_spatial.drop(columns = ["preceeding_geometry", "following_geometry"])
 
-    print(df_spatial.columns)
 
     df_spatial = gpd.GeoDataFrame(df_spatial, crs = dict(init = "epsg:29183"))
     df_spatial["following_purpose"] = df_spatial["following_purpose"].astype(str)
