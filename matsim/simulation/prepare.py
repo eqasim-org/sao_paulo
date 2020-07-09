@@ -17,6 +17,7 @@ def configure(context):
     context.config("sampling_rate")
     context.config("processes")
     context.config("random_seed")
+    context.config("data_path")
 
 def execute(context):
     # Prepare input files
@@ -35,6 +36,9 @@ def execute(context):
         context.stage("matsim.scenario.supply.processed")["network_path"]
     )
 
+    sp_path = "%s/Spatial/SC2010_RMSP_CEM_V3_center.shp" % context.config("data_path")
+    
+
     eqasim.run(context, "org.eqasim.core.scenario.preparation.RunPreparation", [
         "--input-facilities-path", facilities_path,
         "--output-facilities-path", "sao_paulo_facilities.xml.gz",
@@ -44,6 +48,13 @@ def execute(context):
         "--output-network-path", "sao_paulo_network.xml.gz",
         "--threads", context.config("processes")
     ])
+    
+    eqasim.run(context, "org.eqasim.sao_paulo.preparation.RunImputeInnerSPAttribute", [
+            "--sp-path", sp_path,
+            "--attribute-name", "city",
+            "--input-path", "prepared_population.xml.gz",
+            "--output-path", "prepared_population.xml.gz"
+        ])
 
     assert os.path.exists("%s/sao_paulo_facilities.xml.gz" % context.path())
     assert os.path.exists("%s/prepared_population.xml.gz" % context.path())
