@@ -5,10 +5,11 @@ from sklearn.neighbors import KDTree
 
 def configure(context):
     context.config("data_path")
+    context.config("shapefile_name")
 
 def execute(context):
     
-    df_zones_census = gpd.read_file("%s/Spatial/SC2010_RMSP_CEM_V3_all_state.shp" % context.config("data_path"))
+    df_zones_census = gpd.read_file("%s/Spatial/%s" % (context.config("data_path"), context.config("shapefile_name")))
     df_zones_census.crs = {"init":"epsg:4326"}
     df_zones_census_dissolved = df_zones_census#.dissolve(by='AP_2010_CH') 
     df_zones_census_dissolved = df_zones_census_dissolved[['geometry', 'AP_2010_CH']]
