@@ -7,7 +7,7 @@ import os
 
 def configure(context):
     context.config("data_path")    
-
+    context.config("census_file")
 def execute(context):
 
     columns = ['V0001', 'V0011', 'V0221', 'V0222', 'V0601', 'V6036', 'V0401', 'V1004', 'V0010', 'V0641', 'V0642', 'V0643', 'V0644', 'V0628', 'V6529', 'V0504']
@@ -15,11 +15,11 @@ def execute(context):
     CHUNK_SIZE = 500000 
 
     # Read the file in chunks
-    reader = pyreadstat.read_file_in_chunks(pyreadstat.read_sav, "%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config("data_path"), chunksize= CHUNK_SIZE, usecols=columns)
+    reader = pyreadstat.read_file_in_chunks(pyreadstat.read_sav, "%s/Census/%s" % (context.config("data_path"), context.config("census_file")), chunksize= CHUNK_SIZE, usecols=columns)
     #reader = pd.read_spss("%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config("data_path"))
 
     # Get column names and create output dataframe
-    df, meta = pyreadstat.read_sav("%s/Census/Censo.2010.brasil.amostra.10porcento.sav" % context.config("data_path"), row_offset=1, row_limit=1,usecols=columns)
+    df, meta = pyreadstat.read_sav("%s/Census/%s" % (context.config("data_path"), context.config("census_file")), row_offset=1, row_limit=1,usecols=columns)
     df_census = pd.DataFrame(columns = df.columns)
     
     # Fill in the output dataframe with relevant observations from chunks

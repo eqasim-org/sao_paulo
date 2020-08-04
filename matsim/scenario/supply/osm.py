@@ -5,7 +5,7 @@ import matsim.runtime.pt2matsim as pt2matsim
 def configure(context):
     context.stage("matsim.runtime.java")
     context.stage("matsim.runtime.pt2matsim")
-
+    context.config("osm_matsim_file")
     context.config("data_path")
 
 def execute(context):
@@ -228,7 +228,7 @@ def execute(context):
     return "network.xml.gz"
 
 def validate(context):
-    if not os.path.exists("%s/osm/sao_paulo.osm.gz" % context.config("data_path")):
+    if not os.path.exists("%s/osm/%s" % (context.config("data_path"), context.config("osm_matsim_file"))):
         raise RuntimeError("OSM data is not available")
 
     return os.path.getsize("%s/osm/sao_paulo.osm.gz" % context.config("data_path"))

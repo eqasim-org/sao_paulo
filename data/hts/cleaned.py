@@ -8,11 +8,12 @@ import time
 
 def configure(context):
     context.stage("data.spatial.zones")
-    context.config("data_path")    
+    context.config("data_path")
+    context.config("hts_file")    
 
 def execute(context):
 	
-    dbf = Dbf5("%s/HTS/OD_2017.dbf" %  context.config("data_path"))
+    dbf = Dbf5("%s/HTS/%s" %  (context.config("data_path"), context.config("hts_file") ))
     df = dbf.to_dataframe()
 	
     df_reduced = df[["ID_PESS","ZONA","IDADE","SEXO",
