@@ -67,7 +67,6 @@ def import_data_actual(context):
     df_persons_no_trip = df_act_persons[np.logical_not(df_act_persons["person_id"].isin(t_id))]
     df_persons_no_trip = df_persons_no_trip.set_index(["person_id"])
 
-    print(df_act.columns)
     return df_act, df_persons_no_trip
 
 
