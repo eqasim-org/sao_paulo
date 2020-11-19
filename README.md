@@ -17,7 +17,7 @@ In case you wish to use the generated synthetic travel demand or agent-based sce
 - [Synthetic travel demand](https://polybox.ethz.ch/index.php/s/JPASnSItJNwJb7J?path=%2FSynthetic%20Travel%20Demand)
 - [Runnable eqasim Scenario](https://polybox.ethz.ch/index.php/s/JPASnSItJNwJb7J) The files are located in the zipped file called Simulation_input100pct.zip.
 
-They scenario is created using this repository with the current version of the master branch.
+The scenario is created using this repository with the version 1.0.
 
 ## Main reference
 
