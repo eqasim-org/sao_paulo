@@ -15,7 +15,9 @@ travel survey is available.
 In case you wish to use the generated synthetic travel demand or agent-based scenario directly, they are available here:
 
 - [Synthetic travel demand](https://polybox.ethz.ch/index.php/s/JPASnSItJNwJb7J?path=%2FSynthetic%20Travel%20Demand)
-- [Runnable eqasim Scenario](https://polybox.ethz.ch/index.php/s/JPASnSItJNwJb7J) The files are located in the zipped file called Simulation_input100pct.zip.
+- [Runnable eqasim Scenario](https://polybox.ethz.ch/index.php/s/JPASnSItJNwJb7J) The files are located in the zipped file called Simulation_input_100pct.zip.
+
+To run the simulation directly with the provided scenario you need to use the eqasim environment. The main class requiring only the config file as an input is available [here](https://github.com/eqasim-org/eqasim-java/blob/develop/sao_paulo/src/main/java/org/eqasim/sao_paulo/RunSimulation.java).
 
 The scenario is created using this repository with the version 1.0.
 
