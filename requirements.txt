@@ -12,3 +12,4 @@ tqdm==4.45.0
 synpp==1.2.1
 tables==3.6.1
 xlrd==1.2.0
+gtfsmerger==0.1.6
