@@ -2,7 +2,7 @@
 ## based on the synpp package
 
 # This is the path to a directory where the pipeline can store temporary data
-working_directory: /home/asallard/Scenarios/Sao_Paulo/cache
+working_directory: /nas/balacm/SaoPauloSynPP/cache_test
 
 # This section defines which parts of the pipeline should be run
 run:
@@ -19,9 +19,9 @@ run:
   #- matsim.scenario.population
   #- matsim.scenario.supply.processed
   #- matsim.scenario.supply.osm
-  #- matsim.runtime.eqasim
-  #- matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
-  - analysis.analysis
+  - matsim.runtime.eqasim
+  - matsim.output # Uncomment, if you want to run the full simulation (you'll need Java for that)
+  #- analysis.analysis
 
 # Here the configuraiton of the pipeline starts
 config:
@@ -33,11 +33,19 @@ config:
   random_seed: 1234
 
   # Paths to the input data and where the output should be stored
-  data_path: /home/asallard/Scenarios/Sao_Paulo/Data_SP
-  output_path: /home/asallard/Scenarios/Sao_Paulo/output
+  data_path: /nas/balacm/Data_SP
+  output_path: /nas/balacm/SaoPauloSynPP/output
+
+  shapefile_name: "SC2010_RMSP_CEM_V3_all_state.shp"
+  shapefile_center_name: "SC2010_RMSP_CEM_V3_center.shp"
+  shapefile_city_name: "SC2010_RMSP_CEM_V3_city.shp"
+  census_file: "Censo.2010.brasil.amostra.10porcento.sav"
+  osm_file: "sao_paulo.osm.pbf"
+  osm_matsim_file: "sao_paulo.osm.gz"
+  hts_file: "OD_2017.dbf"
 
   # Only interesting if you run the simulation
   java_memory: 80G
 
   # Only interesting if the analysis script is run
-  analysis_path: /home/asallard/Scenarios/Sao_Paulo/Analysis
+  analysis_path: /nas/balacm/SaoPauloSynPP/Analysis
