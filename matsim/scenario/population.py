@@ -36,7 +36,7 @@ def add_person(writer, person, activities, trips):
     writer.add_attribute("householdId", "java.lang.Integer", person[PERSON_FIELDS.index("household_id")])
     writer.add_attribute("householdIncome", "java.lang.Double", person[PERSON_FIELDS.index("household_income")])
 
-    writer.add_attribute("carAvailability", "java.lang.String", person[PERSON_FIELDS.index("binary_car_availability")])
+    writer.add_attribute("carAvailability", "java.lang.String", "always" if person[PERSON_FIELDS.index("binary_car_availability")] else "never") 
 
     writer.add_attribute("censusPersonId", "java.lang.Long", person[PERSON_FIELDS.index("census_person_id")])
 
