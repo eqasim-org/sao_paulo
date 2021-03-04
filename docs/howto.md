@@ -127,6 +127,11 @@ Your folder structure should now have at least the following files:
 - `data/Spatial/SC2010_RMSP_CEM_V3_city.dbf`
 - `data/Spatial/SC2010_RMSP_CEM_V3_city.prj`
 - `data/Spatial/SC2010_RMSP_CEM_V3_city.shx`
+- `data/Spatial/SC2010_RMSP_CEM_V3_all_state.cpg`
+- `data/Spatial/SC2010_RMSP_CEM_V3_all_state.shp`
+- `data/Spatial/SC2010_RMSP_CEM_V3_all_state.dbf`
+- `data/Spatial/SC2010_RMSP_CEM_V3_all_state.prj`
+- `data/Spatial/SC2010_RMSP_CEM_V3_all_state.shx`
 
 
 If you want to run the simulation, there should be also the following files:
@@ -244,13 +249,13 @@ folder:
 - `sao_paulo_households.xml.gz` containing additional household information
 - `sao_paulo_transit_schedule.xml.gz` and `ile_de_france_transit_vehicles.xml.gz` containing public transport data
 - `sao_paulo_config.xml` containing the MATSim configuration values
-- `sao_paulo-1.0.5.jar` containing a fully packaged version of the simulation code including MATSim and all other dependencies
+- `sao_paulo-1.2.0.jar` containing a fully packaged version of the simulation code including MATSim and all other dependencies
 
 If you want to run the simulation again (in the pipeline it is only run for
 two iterations to test that everything works), you can now call the following:
 
 ```bash
-java -Xmx14G -cp sao_paulo-1.0.5.jar org.eqasim.sao_paulo.RunSimulation --config-path sao_paulo_config.xml
+java -Xmx14G -cp sao_paulo-1.2.0.jar org.eqasim.sao_paulo.RunSimulation --config-path sao_paulo_config.xml
 ```
 
 This will create a `simulation_output` folder (as defined in the `sao_paulo_config.xml`)
