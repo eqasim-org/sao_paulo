@@ -1,6 +1,6 @@
 import shutil
 import os.path
-
+import geopandas as gpd
 import matsim.runtime.eqasim as eqasim
 
 def configure(context):
@@ -18,6 +18,7 @@ def configure(context):
     context.config("processes")
     context.config("random_seed")
     context.config("data_path")
+    context.config("shapefile_city_name")
 
 def execute(context):
     # Prepare input files
@@ -36,9 +37,12 @@ def execute(context):
         context.stage("matsim.scenario.supply.processed")["network_path"]
     )
 
-    sp_path = "%s/Spatial/SC2010_RMSP_CEM_V3_center.shp" % context.config("data_path")
+    sp_path = "%s/Spatial/SC2010_RMSP_CEM_V3_center_transformed.shp" % context.config("data_path")
     
-
+    df_zones_census = gpd.read_file("%s/Spatial/%s" % (context.config("data_path"), context.config("shapefile_city_name")))
+    df_zones_census.crs = {"init":"epsg:4326"}
+    df_zones_census = df_zones_census.to_crs({"init":"epsg:29183"})
+    df_zones_census.to_file("%s/Spatial/SC2010_RMSP_CEM_V3_center_transformed.shp" % context.config("data_path"))
     eqasim.run(context, "org.eqasim.core.scenario.preparation.RunPreparation", [
         "--input-facilities-path", facilities_path,
         "--output-facilities-path", "sao_paulo_facilities.xml.gz",
