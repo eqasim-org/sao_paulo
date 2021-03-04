@@ -247,7 +247,7 @@ folder:
 - `sao_paulo_facilities.xml.gz` containing all businesses, services, etc.
 - `sao_paulo_network.xml.gz` containing the road and transit network
 - `sao_paulo_households.xml.gz` containing additional household information
-- `sao_paulo_transit_schedule.xml.gz` and `ile_de_france_transit_vehicles.xml.gz` containing public transport data
+- `sao_paulo_transit_schedule.xml.gz` and `sao_paulo_transit_vehicles.xml.gz` containing public transport data
 - `sao_paulo_config.xml` containing the MATSim configuration values
 - `sao_paulo-1.2.0.jar` containing a fully packaged version of the simulation code including MATSim and all other dependencies
 
